@@ -331,6 +331,8 @@ export default function DiffPanel({ mode = "inline" }: DiffPanelProps) {
     [activeCwd],
   );
 
+  const latestSelectedTurnId = orderedTurnDiffSummaries[0]?.turnId ?? null;
+
   const selectTurn = (turnId: TurnId) => {
     if (!activeThread) return;
     void navigate({
@@ -433,7 +435,7 @@ export default function DiffPanel({ mode = "inline" }: DiffPanelProps) {
           )}
           onClick={() => scrollTurnStripBy(-180)}
           disabled={!canScrollTurnStripLeft}
-          aria-label="Scroll turn list left"
+          aria-label="Scroll change list left"
         >
           <ChevronLeftIcon className="size-3.5" />
         </button>
@@ -447,7 +449,7 @@ export default function DiffPanel({ mode = "inline" }: DiffPanelProps) {
           )}
           onClick={() => scrollTurnStripBy(180)}
           disabled={!canScrollTurnStripRight}
-          aria-label="Scroll turn list right"
+          aria-label="Scroll change list right"
         >
           <ChevronRightIcon className="size-3.5" />
         </button>
@@ -470,7 +472,7 @@ export default function DiffPanel({ mode = "inline" }: DiffPanelProps) {
                   : "border-border/70 bg-background/70 text-muted-foreground/80 hover:border-border hover:text-foreground/80",
               )}
             >
-              <div className="text-[10px] leading-tight font-medium">All turns</div>
+              <div className="text-[10px] leading-tight font-medium">All changes</div>
             </div>
           </button>
           {orderedTurnDiffSummaries.map((summary) => (
@@ -479,7 +481,15 @@ export default function DiffPanel({ mode = "inline" }: DiffPanelProps) {
               type="button"
               className="shrink-0 rounded-md"
               onClick={() => selectTurn(summary.turnId)}
-              title={summary.turnId}
+              title={`${
+                summary.turnId === latestSelectedTurnId
+                  ? "Latest change"
+                  : `Change ${
+                      summary.checkpointTurnCount ??
+                      inferredCheckpointTurnCountByTurnId[summary.turnId] ??
+                      "?"
+                    }`
+              } • ${formatShortTimestamp(summary.completedAt, settings.timestampFormat)}`}
               data-turn-chip-selected={summary.turnId === selectedTurn?.turnId}
             >
               <div
@@ -490,14 +500,17 @@ export default function DiffPanel({ mode = "inline" }: DiffPanelProps) {
                     : "border-border/70 bg-background/70 text-muted-foreground/80 hover:border-border hover:text-foreground/80",
                 )}
               >
-                <div className="flex items-center gap-1">
+                <div className="flex flex-col gap-0.5">
                   <span className="text-[10px] leading-tight font-medium">
-                    Turn{" "}
-                    {summary.checkpointTurnCount ??
-                      inferredCheckpointTurnCountByTurnId[summary.turnId] ??
-                      "?"}
+                    {summary.turnId === latestSelectedTurnId
+                      ? "Latest"
+                      : `Change ${
+                          summary.checkpointTurnCount ??
+                          inferredCheckpointTurnCountByTurnId[summary.turnId] ??
+                          "?"
+                        }`}
                   </span>
-                  <span className="text-[9px] leading-tight opacity-70">
+                  <span className="text-[9px] leading-tight opacity-60">
                     {formatShortTimestamp(summary.completedAt, settings.timestampFormat)}
                   </span>
                 </div>
@@ -546,15 +559,15 @@ export default function DiffPanel({ mode = "inline" }: DiffPanelProps) {
     <DiffPanelShell mode={mode} header={headerRow}>
       {!activeThread ? (
         <div className="flex flex-1 items-center justify-center px-5 text-center text-xs text-muted-foreground/70">
-          Select a thread to inspect turn diffs.
+          Select a thread to inspect changes.
         </div>
       ) : !isGitRepo ? (
         <div className="flex flex-1 items-center justify-center px-5 text-center text-xs text-muted-foreground/70">
-          Turn diffs are unavailable because this project is not a git repository.
+          Changes are unavailable because this project is not a git repository.
         </div>
       ) : orderedTurnDiffSummaries.length === 0 ? (
         <div className="flex flex-1 items-center justify-center px-5 text-center text-xs text-muted-foreground/70">
-          No completed turns yet.
+          No captured changes yet.
         </div>
       ) : (
         <>
@@ -569,7 +582,7 @@ export default function DiffPanel({ mode = "inline" }: DiffPanelProps) {
             )}
             {!renderablePatch ? (
               isLoadingCheckpointDiff ? (
-                <DiffPanelLoadingState label="Loading checkpoint diff..." />
+                <DiffPanelLoadingState label="Loading changes..." />
               ) : (
                 <div className="flex h-full items-center justify-center px-3 py-2 text-xs text-muted-foreground/70">
                   <p>
