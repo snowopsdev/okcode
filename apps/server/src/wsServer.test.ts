@@ -1593,6 +1593,47 @@ describe("WebSocket Server", () => {
     });
   });
 
+  it("supports projects.listDirectory", async () => {
+    const workspace = makeTempDir("okcode-ws-list-directory-");
+    fs.mkdirSync(path.join(workspace, "src", "components"), { recursive: true });
+    fs.writeFileSync(path.join(workspace, "src", "index.ts"), "export {};", "utf8");
+    fs.writeFileSync(
+      path.join(workspace, "src", "components", "Composer.tsx"),
+      "export {};",
+      "utf8",
+    );
+
+    server = await createTestServer({ cwd: "/test" });
+    const addr = server.address();
+    const port = typeof addr === "object" && addr !== null ? addr.port : 0;
+
+    const [ws] = await connectAndAwaitWelcome(port);
+    connections.push(ws);
+
+    const response = await sendRequest(ws, WS_METHODS.projectsListDirectory, {
+      cwd: workspace,
+      directoryPath: "src",
+    });
+    expect(response.error).toBeUndefined();
+    expect(response.result).toEqual({
+      entries: [
+        {
+          path: "src/components",
+          kind: "directory",
+          parentPath: "src",
+          hasChildren: true,
+        },
+        {
+          path: "src/index.ts",
+          kind: "file",
+          parentPath: "src",
+          hasChildren: false,
+        },
+      ],
+      truncated: false,
+    });
+  });
+
   it("supports projects.writeFile within the workspace root", async () => {
     const workspace = makeTempDir("okcode-ws-write-file-");
 

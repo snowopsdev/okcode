@@ -57,6 +57,55 @@ describe("searchWorkspaceEntries", () => {
     assert.isFalse(result.truncated);
   });
 
+  it("lists root directories before files for tree browsing", async () => {
+    const cwd = makeTempDir("okcode-workspace-list-directory-root-");
+    writeFile(cwd, "src/components/Composer.tsx");
+    writeFile(cwd, "src/index.ts");
+    writeFile(cwd, "README.md");
+
+    const result = await listWorkspaceDirectory({ cwd });
+
+    assert.deepEqual(
+      result.entries.map((entry) => ({
+        path: entry.path,
+        kind: entry.kind,
+        hasChildren: entry.hasChildren,
+      })),
+      [
+        { path: "src", kind: "directory", hasChildren: true },
+        { path: "README.md", kind: "file", hasChildren: false },
+      ],
+    );
+    assert.isFalse(result.truncated);
+  });
+
+  it("lists nested directory children for tree browsing", async () => {
+    const cwd = makeTempDir("okcode-workspace-list-directory-nested-");
+    writeFile(cwd, "src/components/Composer.tsx");
+    writeFile(cwd, "src/components/composePrompt.ts");
+    writeFile(cwd, "src/index.ts");
+
+    const result = await listWorkspaceDirectory({ cwd, directoryPath: "src" });
+
+    assert.deepEqual(
+      result.entries.map((entry) => ({
+        path: entry.path,
+        kind: entry.kind,
+        parentPath: entry.parentPath,
+        hasChildren: entry.hasChildren,
+      })),
+      [
+        {
+          path: "src/components",
+          kind: "directory",
+          parentPath: "src",
+          hasChildren: true,
+        },
+        { path: "src/index.ts", kind: "file", parentPath: "src", hasChildren: false },
+      ],
+    );
+  });
+
   it("filters and ranks entries by query", async () => {
     const cwd = makeTempDir("okcode-workspace-query-");
     writeFile(cwd, "src/components/Composer.tsx");

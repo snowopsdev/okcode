@@ -339,6 +339,22 @@ describe("wsNativeApi", () => {
     });
   });
 
+  it("forwards workspace directory listing to the websocket project method", async () => {
+    requestMock.mockResolvedValue({ entries: [], truncated: false });
+    const { createWsNativeApi } = await import("./wsNativeApi");
+
+    const api = createWsNativeApi();
+    await api.projects.listDirectory({
+      cwd: "/tmp/project",
+      directoryPath: "src",
+    });
+
+    expect(requestMock).toHaveBeenCalledWith(WS_METHODS.projectsListDirectory, {
+      cwd: "/tmp/project",
+      directoryPath: "src",
+    });
+  });
+
   it("uses no client timeout for git.runStackedAction", async () => {
     requestMock.mockResolvedValue({
       action: "commit",
