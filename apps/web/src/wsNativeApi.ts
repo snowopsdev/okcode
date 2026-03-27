@@ -180,7 +180,13 @@ export function createWsNativeApi(): NativeApi {
         position?: { x: number; y: number },
       ): Promise<T | null> => {
         if (window.desktopBridge) {
-          return window.desktopBridge.showContextMenu(items, position) as Promise<T | null>;
+          // Don't pass explicit coordinates to the native Electron menu.
+          // Let Menu.popup() use the current mouse cursor position, which
+          // Electron resolves correctly regardless of title-bar style or
+          // display scaling. Passing CSS clientX/clientY can mis-position
+          // the menu when the sidebar content is scrolled or when the
+          // window uses titleBarStyle "hiddenInset".
+          return window.desktopBridge.showContextMenu(items) as Promise<T | null>;
         }
         return showContextMenuFallback(items, position);
       },
