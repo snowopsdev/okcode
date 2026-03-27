@@ -1,6 +1,100 @@
-# Release Checklist
+# Release Runbook
 
-This document covers how to run desktop releases from one tag, first without signing, then with signing.
+This is the canonical guide for releasing OK Code. It covers the full lifecycle — from pre-release quality gates through cutting a tag to post-release verification — as well as signing setup and troubleshooting.
+
+## Overview
+
+A release produces:
+
+- **Desktop installers** for macOS (arm64 + x64), Linux (x64), and Windows (x64)
+- **CLI npm package** (`okcode`) published to the npm registry
+- **GitHub Release** with all assets, updater metadata, and release documentation
+- **Version bump commit** pushed back to `main`
+
+Releases follow [Semantic Versioning 2.0](https://semver.org/). Versions with a pre-release suffix (e.g. `1.0.0-beta.1`) are published as GitHub prereleases. Plain `X.Y.Z` versions are marked as the latest release.
+
+## Pre-release checklist
+
+Complete every item before tagging.
+
+### Quality gates
+
+```bash
+bun run fmt:check            # Formatting (oxfmt)
+bun run lint                 # Linting (oxlint)
+bun run typecheck            # TypeScript strict mode
+bun run test                 # Unit + integration tests (Vitest, all workspaces)
+bun run test:browser         # Browser tests (Playwright + Chromium)
+bun run test:desktop-smoke   # Desktop smoke tests (Electron)
+bun run release:smoke        # Release pipeline smoke test
+```
+
+All of the above must pass. The release workflow preflight runs `fmt:check`, `lint`, `typecheck`, `test`, and `release:smoke` automatically — but browser and desktop smoke tests should be confirmed in CI on `main` before tagging.
+
+### Documentation
+
+For version `X.Y.Z`, prepare these files **before** tagging:
+
+| File                             | Purpose                                                                                                    |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `CHANGELOG.md`                   | Add a `## [X.Y.Z] - YYYY-MM-DD` section following [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) |
+| `docs/releases/vX.Y.Z.md`        | Human-readable release notes (see template below)                                                          |
+| `docs/releases/vX.Y.Z/assets.md` | Asset manifest for the release                                                                             |
+
+The release workflow **will fail** if `docs/releases/vX.Y.Z.md` or `docs/releases/vX.Y.Z/assets.md` is missing.
+
+### Release notes template
+
+```markdown
+# OK Code vX.Y.Z
+
+**Date:** YYYY-MM-DD
+**Tag:** [`vX.Y.Z`](https://github.com/OpenKnots/okcode/releases/tag/vX.Y.Z)
+
+## Summary
+
+One-sentence description of what this release delivers.
+
+## Highlights
+
+- **Change 1** — Brief description.
+- **Change 2** — Brief description.
+
+## Breaking changes
+
+- None.
+
+## Upgrade and install
+
+- **CLI:** `npm install -g okcode@X.Y.Z`
+- **Desktop:** Download from [GitHub Releases](https://github.com/OpenKnots/okcode/releases/tag/vX.Y.Z).
+
+## Known limitations
+
+- List anything users should be aware of.
+```
+
+## Cutting a release
+
+### Tag-based (standard)
+
+```bash
+git checkout main
+git pull origin main
+
+# Final local sanity check
+bun run fmt:check && bun run lint && bun run typecheck && bun run test
+
+# Tag and push
+git tag vX.Y.Z
+git push origin vX.Y.Z
+```
+
+### Manual dispatch (re-run or hotfix)
+
+```bash
+gh workflow run release.yml -f version=X.Y.Z -f mac_arm64_only=false
+```
 
 ## What the workflow does
 
@@ -142,24 +236,72 @@ To build the same arm64 DMG locally on an Apple Silicon Mac:
 
 `bun run dist:desktop:dmg:arm64`
 
-## 5) Ongoing release checklist
+## 5) Release assets inventory
 
-1. Ensure `main` is green in CI.
-2. Bump app version as needed (see `scripts/update-release-package-versions.ts` and [CHANGELOG.md](../CHANGELOG.md) / [docs/releases/](releases/README.md) for notes).
-3. Create release tag: `vX.Y.Z`.
-4. Push tag.
-5. Verify workflow steps:
-   - preflight passes
-   - all matrix builds pass
-   - release job uploads expected files
-6. Smoke test downloaded artifacts.
+Every successful release attaches these to the GitHub Release:
 
-## 6) Troubleshooting
+| Asset                   | Source   | Format                      |
+| ----------------------- | -------- | --------------------------- |
+| macOS arm64 installer   | CI build | `.dmg`                      |
+| macOS x64 installer     | CI build | `.dmg`                      |
+| macOS updater payloads  | CI build | `.zip`                      |
+| Linux installer         | CI build | `.AppImage`                 |
+| Windows installer       | CI build | `.exe`                      |
+| Differential blockmaps  | CI build | `.blockmap`                 |
+| macOS update manifest   | CI merge | `latest-mac.yml`            |
+| Linux update manifest   | CI build | `latest-linux.yml`          |
+| Windows update manifest | CI build | `latest.yml`                |
+| Changelog               | Repo     | `okcode-CHANGELOG.md`       |
+| Release notes           | Repo     | `okcode-RELEASE-NOTES.md`   |
+| Asset manifest          | Repo     | `okcode-ASSETS-MANIFEST.md` |
 
-- macOS build unsigned when expected signed:
-  - Check all Apple secrets are populated and non-empty.
-- Windows build unsigned when expected signed:
-  - Check all Azure ATS and auth secrets are populated and non-empty.
-- Build fails with signing error:
-  - Retry with secrets removed to confirm unsigned path still works.
-  - Re-check certificate/profile names and tenant/client credentials.
+Additionally, the CLI is published to npm as `okcode@X.Y.Z`.
+
+## 6) Post-release verification
+
+After the workflow completes, verify:
+
+- [ ] GitHub Release page shows correct version name and tag
+- [ ] All platform installers are attached (DMG arm64, DMG x64, AppImage, .exe)
+- [ ] Updater manifests attached (`latest-mac.yml`, `latest-linux.yml`, `latest.yml`)
+- [ ] Documentation attachments present (`okcode-CHANGELOG.md`, `okcode-RELEASE-NOTES.md`, `okcode-ASSETS-MANIFEST.md`)
+- [ ] `npm info okcode` shows the new version
+- [ ] `npx okcode` launches successfully
+- [ ] Desktop auto-updater detects the new version (test from a previous version install)
+- [ ] Version bump commit landed on `main` (check `git log origin/main`)
+- [ ] Prerelease flag is correct (prereleases for suffixed versions, latest for plain `X.Y.Z`)
+
+## 7) Hotfix releases
+
+For urgent patches:
+
+1. Create a fix on `main` (or cherry-pick to a release branch if needed).
+2. Prepare abbreviated release notes and changelog entry.
+3. Tag with the next patch version: `vX.Y.(Z+1)`.
+4. Push the tag — the full release pipeline runs identically.
+5. For an M-series-only emergency fix, use manual dispatch with `mac_arm64_only=true`.
+
+## 8) Troubleshooting
+
+| Symptom                            | Likely cause                                | Fix                                                                                                              |
+| ---------------------------------- | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| macOS build unsigned               | Missing Apple signing secrets               | Verify `CSC_LINK`, `CSC_KEY_PASSWORD`, `APPLE_API_KEY`, `APPLE_API_KEY_ID`, `APPLE_API_ISSUER` are all populated |
+| Windows build unsigned             | Missing Azure ATS secrets                   | Verify all `AZURE_*` secrets are populated                                                                       |
+| Signing error                      | Expired certificate or bad credentials      | Retry without signing (`--signed` flag is auto-detected); re-check certs                                         |
+| npm publish fails                  | OIDC misconfigured or package name conflict | Confirm trusted publisher config in npm settings matches workflow file                                           |
+| Missing release notes              | `docs/releases/vX.Y.Z.md` not committed     | Create the file and re-tag or use manual dispatch                                                                |
+| Preflight fails                    | Code quality issue                          | Fix on `main`, delete the tag, re-tag after fix                                                                  |
+| Version bump commit missing        | GitHub App token issue                      | Check `RELEASE_APP_ID` and `RELEASE_APP_PRIVATE_KEY` secrets                                                     |
+| Updater doesn't detect new version | `latest-mac.yml` malformed or missing       | Check merge step logs; verify `latest*.yml` files in release assets                                              |
+
+## 9) CI/CD workflow inventory
+
+| Workflow            | Trigger                                          | Purpose                                                                                      |
+| ------------------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| `ci.yml`            | PR, push to `main`                               | Full quality gate: format, lint, typecheck, test, browser test, desktop build, release smoke |
+| `release.yml`       | Tag `v*.*.*`, manual dispatch                    | Multi-platform build, sign, publish CLI, create GitHub Release, version bump                 |
+| `release-ready.yml` | PR touching `CHANGELOG.md` or `docs/releases/**` | Validates release documentation completeness                                                 |
+| `audit.yml`         | Weekly (Monday 9am UTC), manual                  | Dependency audit, creates issue if outdated packages found                                   |
+| `pr-size.yml`       | PR events                                        | Auto-labels PRs by diff size (`size:XS` through `size:XXL`)                                  |
+| `pr-vouch.yml`      | PR events                                        | Labels PRs by contributor trust level                                                        |
+| `issue-labels.yml`  | Push to `main` (issue template changes), manual  | Syncs managed issue label definitions                                                        |

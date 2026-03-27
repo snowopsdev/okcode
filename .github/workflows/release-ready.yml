@@ -1,0 +1,88 @@
+# Validates that release documentation is well-formed when PRs touch
+# release-related files. Ensures every version listed in CHANGELOG.md has
+# corresponding documentation under docs/releases/.
+
+name: Release Ready
+
+on:
+  pull_request:
+    paths:
+      - CHANGELOG.md
+      - docs/releases/**
+
+permissions:
+  contents: read
+
+jobs:
+  validate-release-docs:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Validate release documentation
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            const errors = [];
+
+            // ── Read CHANGELOG.md ──────────────────────────────────────
+            const changelogPath = 'CHANGELOG.md';
+            if (!fs.existsSync(changelogPath)) {
+              core.setFailed('CHANGELOG.md not found in repository root.');
+              return;
+            }
+
+            const changelog = fs.readFileSync(changelogPath, 'utf8');
+
+            // ── Parse version entries ──────────────────────────────────
+            // Keep a Changelog format uses: ## [X.Y.Z] - YYYY-MM-DD
+            // We also accept ## [X.Y.Z] without a date.
+            const versionPattern = /^## \[(\d+\.\d+\.\d+)\]/gm;
+            const versions = [];
+            let match;
+
+            while ((match = versionPattern.exec(changelog)) !== null) {
+              versions.push(match[1]);
+            }
+
+            if (versions.length === 0) {
+              errors.push(
+                'CHANGELOG.md does not follow Keep a Changelog format. ' +
+                'Expected at least one "## [X.Y.Z]" section header.'
+              );
+            }
+
+            // ── Check companion docs for each version ──────────────────
+            for (const version of versions) {
+              const tag = `v${version}`;
+
+              const releaseDoc = path.join('docs', 'releases', `${tag}.md`);
+              if (!fs.existsSync(releaseDoc)) {
+                errors.push(`Missing release doc: ${releaseDoc} (for version ${version})`);
+              }
+
+              const assetsDoc = path.join('docs', 'releases', tag, 'assets.md');
+              if (!fs.existsSync(assetsDoc)) {
+                errors.push(`Missing assets doc: ${assetsDoc} (for version ${version})`);
+              }
+            }
+
+            // ── Report results ─────────────────────────────────────────
+            if (errors.length > 0) {
+              core.summary.addHeading('Release Documentation Issues', 2);
+              core.summary.addList(errors);
+              await core.summary.write();
+
+              core.setFailed(
+                `Found ${errors.length} release documentation issue(s):\n` +
+                errors.map(e => `  - ${e}`).join('\n')
+              );
+            } else {
+              core.info(
+                `All ${versions.length} version(s) in CHANGELOG.md have matching release docs.`
+              );
+            }
