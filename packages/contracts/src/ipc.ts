@@ -95,6 +95,45 @@ export interface DesktopUpdateActionResult {
   state: DesktopUpdateState;
 }
 
+export type DesktopPreviewStatus = "closed" | "loading" | "ready" | "error";
+export type DesktopPreviewErrorCode =
+  | "invalid-url"
+  | "non-local-url"
+  | "navigation-blocked"
+  | "load-failed"
+  | "process-gone";
+
+export interface DesktopPreviewError {
+  code: DesktopPreviewErrorCode;
+  message: string;
+}
+
+export interface DesktopPreviewBounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  visible: boolean;
+}
+
+export interface DesktopPreviewState {
+  status: DesktopPreviewStatus;
+  url: string | null;
+  title: string | null;
+  visible: boolean;
+  error: DesktopPreviewError | null;
+}
+
+export interface PreviewOpenResult {
+  accepted: boolean;
+  state: DesktopPreviewState;
+}
+
+export interface PreviewNavigateResult {
+  accepted: boolean;
+  state: DesktopPreviewState;
+}
+
 export interface DesktopBridge {
   getWsUrl: () => string | null;
   pickFolder: () => Promise<string | null>;
@@ -110,6 +149,15 @@ export interface DesktopBridge {
   downloadUpdate: () => Promise<DesktopUpdateActionResult>;
   installUpdate: () => Promise<DesktopUpdateActionResult>;
   onUpdateState: (listener: (state: DesktopUpdateState) => void) => () => void;
+  preview: {
+    open: (input: { url: string; title?: string | null }) => Promise<PreviewOpenResult>;
+    close: () => Promise<void>;
+    reload: () => Promise<void>;
+    navigate: (input: { url: string }) => Promise<PreviewNavigateResult>;
+    getState: () => Promise<DesktopPreviewState>;
+    setBounds: (bounds: DesktopPreviewBounds) => Promise<void>;
+    onState: (listener: (state: DesktopPreviewState) => void) => () => void;
+  };
 }
 
 export interface NativeApi {
