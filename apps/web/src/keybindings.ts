@@ -254,6 +254,25 @@ export function isTerminalClearShortcut(
   );
 }
 
+export function isTerminalAddToChatShortcut(
+  event: ShortcutEventLike,
+  platform = navigator.platform,
+): boolean {
+  if (event.type !== undefined && event.type !== "keydown") {
+    return false;
+  }
+
+  const key = event.key.toLowerCase();
+
+  // Cmd+L on Mac
+  if (isMacPlatform(platform)) {
+    return key === "l" && event.metaKey && !event.ctrlKey && !event.altKey && !event.shiftKey;
+  }
+
+  // Ctrl+Shift+L on non-Mac (Ctrl+L is terminal clear)
+  return key === "l" && event.ctrlKey && event.shiftKey && !event.metaKey && !event.altKey;
+}
+
 export function terminalNavigationShortcutData(
   event: ShortcutEventLike,
   platform = navigator.platform,

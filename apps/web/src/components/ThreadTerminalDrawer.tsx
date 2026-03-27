@@ -3,6 +3,7 @@ import { Plus, SquareSplitHorizontal, TerminalSquare, Trash2, XIcon } from "luci
 import { type ThreadId } from "@okcode/contracts";
 import { Terminal, type ITheme } from "@xterm/xterm";
 import {
+  type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
   useCallback,
@@ -19,7 +20,11 @@ import {
   isTerminalLinkActivation,
   resolvePathLinkTarget,
 } from "../terminal-links";
-import { isTerminalClearShortcut, terminalNavigationShortcutData } from "../keybindings";
+import {
+  isTerminalAddToChatShortcut,
+  isTerminalClearShortcut,
+  terminalNavigationShortcutData,
+} from "../keybindings";
 import {
   DEFAULT_THREAD_TERMINAL_HEIGHT,
   DEFAULT_THREAD_TERMINAL_ID,
@@ -222,6 +227,12 @@ function TerminalViewport({
   const selectionActionRequestIdRef = useRef(0);
   const selectionActionOpenRef = useRef(false);
   const selectionActionTimerRef = useRef<number | null>(null);
+  const [hoverLine, setHoverLine] = useState<{
+    bufferLine: number;
+    top: number;
+    cellHeight: number;
+  } | null>(null);
+  const hoverBufferLineRef = useRef<number | null>(null);
 
   useEffect(() => {
     onSessionExitedRef.current = onSessionExited;
@@ -350,6 +361,18 @@ function TerminalViewport({
     };
 
     terminal.attachCustomKeyEventHandler((event) => {
+      if (isTerminalAddToChatShortcut(event)) {
+        event.preventDefault();
+        event.stopPropagation();
+        const action = readSelectionAction();
+        if (action) {
+          onAddTerminalContextRef.current(action.selection);
+          terminalRef.current?.clearSelection();
+          terminalRef.current?.focus();
+        }
+        return false;
+      }
+
       const navigationData = terminalNavigationShortcutData(event);
       if (navigationData !== null) {
         event.preventDefault();
@@ -466,6 +489,10 @@ function TerminalViewport({
     const handlePointerDown = (event: PointerEvent) => {
       clearSelectionAction();
       selectionGestureActiveRef.current = event.button === 0;
+      if (event.button === 0) {
+        hoverBufferLineRef.current = null;
+        setHoverLine(null);
+      }
     };
     window.addEventListener("mouseup", handleMouseUp);
     mount.addEventListener("pointerdown", handlePointerDown);
@@ -650,8 +677,90 @@ function TerminalViewport({
       window.cancelAnimationFrame(frame);
     };
   }, [drawerHeight, resizeEpoch, terminalId, threadId]);
+
+  const addBufferLineToChat = useCallback(
+    (bufferLine: number) => {
+      const terminal = terminalRef.current;
+      if (!terminal) return;
+      const line = terminal.buffer.active.getLine(bufferLine);
+      if (!line) return;
+      const text = line.translateToString(true);
+      if (!text.trim()) return;
+      onAddTerminalContextRef.current({
+        terminalId,
+        terminalLabel: terminalLabelRef.current,
+        lineStart: bufferLine + 1,
+        lineEnd: bufferLine + 1,
+        text,
+      });
+    },
+    [terminalId],
+  );
+
+  const handleTerminalMouseMove = useCallback((e: ReactMouseEvent) => {
+    const terminal = terminalRef.current;
+    const mount = containerRef.current;
+    if (!terminal || !mount || selectionGestureActiveRef.current) {
+      if (hoverBufferLineRef.current !== null) {
+        hoverBufferLineRef.current = null;
+        setHoverLine(null);
+      }
+      return;
+    }
+    const screen = mount.querySelector(".xterm-screen") as HTMLElement | null;
+    if (!screen) return;
+    const rect = screen.getBoundingClientRect();
+    const y = e.clientY - rect.top;
+    const cellHeight = rect.height / terminal.rows;
+    const row = Math.floor(y / cellHeight);
+    if (row < 0 || row >= terminal.rows) {
+      if (hoverBufferLineRef.current !== null) {
+        hoverBufferLineRef.current = null;
+        setHoverLine(null);
+      }
+      return;
+    }
+    const bufferLine = terminal.buffer.active.viewportY + row;
+    if (hoverBufferLineRef.current === bufferLine) return;
+    hoverBufferLineRef.current = bufferLine;
+    setHoverLine({ bufferLine, top: row * cellHeight, cellHeight });
+  }, []);
+
+  const handleTerminalMouseLeave = useCallback(() => {
+    hoverBufferLineRef.current = null;
+    setHoverLine(null);
+  }, []);
+
   return (
-    <div ref={containerRef} className="relative h-full w-full overflow-hidden rounded-[4px]" />
+    <div
+      className="relative h-full w-full overflow-hidden rounded-[4px]"
+      onMouseMove={handleTerminalMouseMove}
+      onMouseLeave={handleTerminalMouseLeave}
+    >
+      <div ref={containerRef} className="h-full w-full" />
+      {hoverLine !== null && (
+        <button
+          type="button"
+          className="absolute right-1.5 z-10 flex items-center justify-center rounded border border-border/40 bg-background/70 text-foreground/30 transition-all hover:border-border hover:bg-accent hover:text-foreground"
+          style={{
+            top: `${hoverLine.top + Math.max(0, (hoverLine.cellHeight - 18) / 2)}px`,
+            width: "18px",
+            height: "18px",
+          }}
+          onPointerDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            addBufferLineToChat(hoverLine.bufferLine);
+          }}
+          aria-label="Add line to chat"
+        >
+          <Plus className="size-3" />
+        </button>
+      )}
+    </div>
   );
 }
 
