@@ -578,8 +578,12 @@ export default function Sidebar() {
     let pickedPath: string | null = null;
     try {
       pickedPath = await api.dialogs.pickFolder();
-    } catch {
-      // Ignore picker failures and leave the current thread selection unchanged.
+    } catch (error) {
+      toastManager.add({
+        type: "error",
+        title: "Could not open folder picker",
+        description: error instanceof Error ? error.message : "An unexpected error occurred.",
+      });
     }
     if (pickedPath) {
       await addProjectFromPath(pickedPath);

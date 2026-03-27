@@ -6,7 +6,7 @@
  *
  * @module Server
  */
-import http from "node:http";
+import http, { type IncomingMessage } from "node:http";
 import type { Duplex } from "node:stream";
 
 import Mime from "@effect/platform-node/Mime";
@@ -45,16 +45,6 @@ import {
 } from "effect";
 import { WebSocketServer, type WebSocket } from "ws";
 
-function isLocalWebSocketClient(ws: WebSocket): boolean {
-  const raw = ws as WebSocket & {
-    socket?: { remoteAddress?: string | undefined };
-    _socket?: { remoteAddress?: string | undefined };
-  };
-  const addr = raw.socket?.remoteAddress ?? raw._socket?.remoteAddress;
-  if (!addr) return false;
-  return addr === "127.0.0.1" || addr === "::1" || addr === "::ffff:127.0.0.1";
-}
-
 import { createLogger } from "./logger";
 import { pickFolderNative } from "./nativeFolderPicker.ts";
 import { GitManager } from "./git/Services/GitManager.ts";
@@ -89,6 +79,46 @@ import { expandHomePath } from "./os-jank.ts";
 import { makeServerPushBus } from "./wsServer/pushBus.ts";
 import { makeServerReadiness } from "./wsServer/readiness.ts";
 import { decodeJsonResult, formatSchemaError } from "@okcode/shared/schemaJson";
+
+/**
+ * Remote address from the HTTP upgrade (`request.socket`). The `ws` library often does not
+ * expose a reliable `socket.remoteAddress` when handling messages, so we capture it here.
+ */
+const remoteAddressByWebSocket = new WeakMap<WebSocket, string>();
+
+function captureWebSocketRemoteAddress(ws: WebSocket, request: IncomingMessage): void {
+  const addr = request.socket?.remoteAddress;
+  if (typeof addr === "string" && addr.length > 0) {
+    remoteAddressByWebSocket.set(ws, addr);
+  }
+}
+
+function getWebSocketRemoteAddress(ws: WebSocket): string | undefined {
+  const fromUpgrade = remoteAddressByWebSocket.get(ws);
+  if (fromUpgrade !== undefined) {
+    return fromUpgrade;
+  }
+  const raw = ws as WebSocket & {
+    socket?: { remoteAddress?: string | undefined };
+    _socket?: { remoteAddress?: string | undefined };
+  };
+  return raw.socket?.remoteAddress ?? raw._socket?.remoteAddress;
+}
+
+function isLoopbackRemoteAddress(addr: string): boolean {
+  if (addr === "::1" || addr === "127.0.0.1" || addr === "::ffff:127.0.0.1") {
+    return true;
+  }
+  return /^127\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(addr);
+}
+
+function isLocalWebSocketClient(ws: WebSocket): boolean {
+  const addr = getWebSocketRemoteAddress(ws);
+  if (addr === undefined || addr.length === 0) {
+    return true;
+  }
+  return isLoopbackRemoteAddress(addr);
+}
 
 /**
  * ServerShape - Service API for server lifecycle control.
@@ -978,7 +1008,8 @@ export const createServer = Effect.fn(function* (): Effect.fn.Return<
     });
   });
 
-  wss.on("connection", (ws) => {
+  wss.on("connection", (ws, request) => {
+    captureWebSocketRemoteAddress(ws, request);
     const segments = cwd.split(/[/\\]/).filter(Boolean);
     const projectName = segments[segments.length - 1] ?? "project";
 
