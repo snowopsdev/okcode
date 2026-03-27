@@ -1,28 +1,109 @@
 # OK Code
 
-T3 Code is a minimal web GUI for coding agents (currently Codex and Claude, more coming soon).
+A minimal web GUI for coding agents. Currently supports Codex and Claude, with more providers coming.
 
-## How to use
+## Quick Start
 
 > [!WARNING]
-> You need to have [Codex CLI](https://github.com/openai/codex) installed and authorized for OK Code to work.
+> You need [Codex CLI](https://github.com/openai/codex) installed and authorized for OK Code to work.
 
 ```bash
 npx okcode
 ```
 
-You can also just install the desktop app. It's cooler.
+Or install the [desktop app from the Releases page](https://github.com/OpenKnots/okcode/releases).
 
-Install the [desktop app from the Releases page](https://github.com/OpenKnots/okcode/releases)
+## Development Setup
 
-## Some notes
+**Prerequisites**: [Bun](https://bun.sh) >= 1.3.9, [Node.js](https://nodejs.org) >= 24.13.1
 
-We are very very early in this project. Expect bugs.
+```bash
+bun install
+bun dev            # start server + web in parallel
+```
 
-We are not accepting contributions yet.
+This runs the contracts build, then starts the server (port 3773) and web app (port 5733) together via Turbo.
 
-## If you REALLY want to contribute still.... read this first
+Other dev commands:
+
+```bash
+bun dev:server     # server only
+bun dev:web        # web only
+bun dev:desktop    # Electron desktop + web
+bun dev:marketing  # Astro marketing site
+```
+
+Quality checks:
+
+```bash
+bun fmt            # format (oxfmt)
+bun lint           # lint (oxlint)
+bun typecheck      # type-check all packages
+bun run test       # run tests (Vitest)
+```
+
+## Architecture
+
+OK Code is a monorepo with four apps and two shared packages, orchestrated by [Turbo](https://turbo.build).
+
+```
+┌─────────────────────────────────┐
+│  Browser (React + Vite)         │
+│  wsTransport (state machine)    │
+│  Typed push decode at boundary  │
+└──────────┬──────────────────────┘
+           │ ws://localhost:3773
+┌──────────▼──────────────────────┐
+│  apps/server (Node.js)          │
+│  WebSocket + HTTP static server │
+│  OrchestrationEngine            │
+│  ProviderService                │
+└──────────┬──────────────────────┘
+           │ JSON-RPC over stdio
+┌──────────▼──────────────────────┐
+│  codex app-server               │
+└─────────────────────────────────┘
+```
+
+The server spawns `codex app-server` as a child process, communicating over JSON-RPC on stdio. Provider runtime events are normalized into orchestration domain events and pushed to the browser over WebSocket.
+
+### Packages
+
+| Package             | Path                 | Role                                                                                                                                                                                          |
+| ------------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `okcode`            | `apps/server`        | Node.js CLI and WebSocket server. Wraps Codex app-server, serves the React web app, and manages provider sessions.                                                                            |
+| `@okcode/web`       | `apps/web`           | React 19 + Vite SPA. Session UX, conversation rendering, and client-side state via Zustand. Connects to the server over WebSocket.                                                            |
+| `@okcode/desktop`   | `apps/desktop`       | Electron shell that bundles the server and web app into a native desktop application with auto-updates.                                                                                       |
+| `@okcode/marketing` | `apps/marketing`     | Astro marketing site.                                                                                                                                                                         |
+| `@okcode/contracts` | `packages/contracts` | Shared [Effect](https://effect.website) schemas and TypeScript contracts for the WebSocket protocol, provider events, orchestration model, and session types. Schema-only — no runtime logic. |
+| `@okcode/shared`    | `packages/shared`    | Shared runtime utilities (git, logging, shell, networking). Uses explicit subpath exports (`@okcode/shared/git`, etc.) — no barrel index.                                                     |
+
+### Key Technologies
+
+- **Runtime**: Node.js + Bun
+- **UI**: React 19, Vite 8, Tailwind CSS 4, TanStack Router & Query
+- **Server**: Effect, WebSocket (`ws`), node-pty
+- **Desktop**: Electron
+- **Schemas**: Effect Schema (in `@okcode/contracts`)
+- **Build**: Turbo, tsdown
+- **Lint/Format**: oxlint, oxfmt
+- **Tests**: Vitest, Playwright
+
+### Event Flow
+
+1. The browser opens a WebSocket to the server and registers typed listeners.
+2. User actions become typed requests sent through the WebSocket transport.
+3. The server routes requests to `ProviderService`, which talks to `codex app-server` over JSON-RPC.
+4. Provider events are ingested, normalized into orchestration events, and persisted.
+5. The server pushes domain events back to the browser through an ordered push bus (`orchestration.domainEvent` channel).
+6. Async work (checkpoints, command reactions) runs through queue-backed workers and emits typed receipts on completion.
+
+For the full architecture with sequence diagrams, see [.docs/architecture.md](.docs/architecture.md).
+
+## Contributing
 
 Read [CONTRIBUTING.md](./CONTRIBUTING.md) before opening an issue or PR.
 
-Need support? Join the [Discord](https://discord.gg/jn4EGJjrvv).
+## Support
+
+Join the [Discord](https://discord.gg/jn4EGJjrvv).

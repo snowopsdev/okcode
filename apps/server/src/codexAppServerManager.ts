@@ -405,8 +405,8 @@ export function normalizeCodexModelSlug(
 export function buildCodexInitializeParams() {
   return {
     clientInfo: {
-      name: "t3code_desktop",
-      title: "T3 Code Desktop",
+      name: "okcode_desktop",
+      title: "OK Code Desktop",
       version: "0.1.0",
     },
     capabilities: {
