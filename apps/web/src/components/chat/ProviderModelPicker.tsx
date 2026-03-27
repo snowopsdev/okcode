@@ -7,14 +7,12 @@ import { Button } from "../ui/button";
 import {
   Menu,
   MenuGroup,
+  MenuGroupLabel,
   MenuItem,
   MenuPopup,
   MenuRadioGroup,
   MenuRadioItem,
   MenuSeparator as MenuDivider,
-  MenuSub,
-  MenuSubPopup,
-  MenuSubTrigger,
   MenuTrigger,
 } from "../ui/menu";
 import { ClaudeAI, CursorIcon, Gemini, Icon, OpenAI, OpenCodeIcon } from "../Icons";
@@ -46,6 +44,10 @@ function providerIconClassName(
   fallbackClassName: string,
 ): string {
   return provider === "claudeAgent" ? "text-[#d97757]" : fallbackClassName;
+}
+
+function getProviderLabel(provider: ProviderKind): string {
+  return AVAILABLE_PROVIDER_OPTIONS.find((option) => option.value === provider)?.label ?? provider;
 }
 
 export const ProviderModelPicker = memo(function ProviderModelPicker(props: {
@@ -122,6 +124,9 @@ export const ProviderModelPicker = memo(function ProviderModelPicker(props: {
       <MenuPopup align="start">
         {props.lockedProvider !== null ? (
           <MenuGroup>
+            <MenuGroupLabel className="px-2 pb-1 pt-2 text-[11px] uppercase tracking-[0.08em]">
+              {getProviderLabel(props.lockedProvider)} · locked for this thread
+            </MenuGroupLabel>
             <MenuRadioGroup
               value={props.model}
               onValueChange={(value) => handleModelChange(props.lockedProvider!, value)}
@@ -139,11 +144,12 @@ export const ProviderModelPicker = memo(function ProviderModelPicker(props: {
           </MenuGroup>
         ) : (
           <>
-            {AVAILABLE_PROVIDER_OPTIONS.map((option) => {
+            {AVAILABLE_PROVIDER_OPTIONS.map((option, index) => {
               const OptionIcon = PROVIDER_ICON_BY_PROVIDER[option.value];
               return (
-                <MenuSub key={option.value}>
-                  <MenuSubTrigger>
+                <MenuGroup key={option.value}>
+                  {index > 0 ? <MenuDivider /> : null}
+                  <MenuGroupLabel className="flex items-center gap-2 px-2 pb-1 pt-2 text-[11px] uppercase tracking-[0.08em]">
                     <OptionIcon
                       aria-hidden="true"
                       className={cn(
@@ -151,27 +157,23 @@ export const ProviderModelPicker = memo(function ProviderModelPicker(props: {
                         providerIconClassName(option.value, "text-muted-foreground/85"),
                       )}
                     />
-                    {option.label}
-                  </MenuSubTrigger>
-                  <MenuSubPopup className="[--available-height:min(24rem,70vh)]">
-                    <MenuGroup>
-                      <MenuRadioGroup
-                        value={props.provider === option.value ? props.model : ""}
-                        onValueChange={(value) => handleModelChange(option.value, value)}
+                    <span>{option.label}</span>
+                  </MenuGroupLabel>
+                  <MenuRadioGroup
+                    value={props.provider === option.value ? props.model : ""}
+                    onValueChange={(value) => handleModelChange(option.value, value)}
+                  >
+                    {props.modelOptionsByProvider[option.value].map((modelOption) => (
+                      <MenuRadioItem
+                        key={`${option.value}:${modelOption.slug}`}
+                        value={modelOption.slug}
+                        onClick={() => setIsMenuOpen(false)}
                       >
-                        {props.modelOptionsByProvider[option.value].map((modelOption) => (
-                          <MenuRadioItem
-                            key={`${option.value}:${modelOption.slug}`}
-                            value={modelOption.slug}
-                            onClick={() => setIsMenuOpen(false)}
-                          >
-                            {modelOption.name}
-                          </MenuRadioItem>
-                        ))}
-                      </MenuRadioGroup>
-                    </MenuGroup>
-                  </MenuSubPopup>
-                </MenuSub>
+                        {modelOption.name}
+                      </MenuRadioItem>
+                    ))}
+                  </MenuRadioGroup>
+                </MenuGroup>
               );
             })}
             {UNAVAILABLE_PROVIDER_OPTIONS.length > 0 && <MenuDivider />}

@@ -78,7 +78,8 @@ const INSTALL_PROVIDER_SETTINGS: readonly InstallProviderSettings[] = [
     binaryPlaceholder: "Codex binary path",
     binaryDescription: (
       <>
-        Leave blank to use <code>codex</code> from your PATH.
+        Leave blank to use <code>codex</code> from your PATH. Authentication normally uses{" "}
+        <code>codex login</code> unless your Codex config points at a custom model provider.
       </>
     ),
     homePathKey: "codexHomePath",
@@ -92,7 +93,8 @@ const INSTALL_PROVIDER_SETTINGS: readonly InstallProviderSettings[] = [
     binaryPlaceholder: "Claude binary path",
     binaryDescription: (
       <>
-        Leave blank to use <code>claude</code> from your PATH.
+        Leave blank to use <code>claude</code> from your PATH. Authentication uses{" "}
+        <code>claude auth login</code>.
       </>
     ),
   },
@@ -673,7 +675,7 @@ function SettingsRouteView() {
 
               <SettingsRow
                 title="Custom models"
-                description="Add custom model slugs for supported providers."
+                description="Add custom model slugs for Codex or Anthropic. The chat picker groups models by provider."
                 resetAction={
                   totalCustomModels > 0 ? (
                     <SettingResetButton
@@ -805,7 +807,7 @@ function SettingsRouteView() {
             <SettingsSection title="Advanced">
               <SettingsRow
                 title="Provider installs"
-                description="Override the CLI used for new sessions."
+                description="Override the CLI binaries and auth homes used for new sessions."
                 resetAction={
                   isInstallSettingsDirty ? (
                     <SettingResetButton
