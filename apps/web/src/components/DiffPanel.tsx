@@ -679,7 +679,7 @@ export default function DiffPanel({ mode = "inline" }: DiffPanelProps) {
                   const themedFileKey = `${fileKey}:${resolvedTheme}`;
                   const fileReviewState = activeReviewState[filePath] ?? {
                     accepted: false,
-                    collapsed: false,
+                    collapsed: true,
                   };
                   return (
                     <DiffFileSection

@@ -18,9 +18,9 @@ describe("reconcileDiffFileReviewState", () => {
     });
   });
 
-  it("initializes new files as unaccepted and expanded", () => {
+  it("initializes new files as unaccepted and collapsed", () => {
     expect(reconcileDiffFileReviewState(["src/a.ts"], undefined)).toEqual({
-      "src/a.ts": { accepted: false, collapsed: false },
+      "src/a.ts": { accepted: false, collapsed: true },
     });
   });
 });
@@ -79,6 +79,7 @@ describe("expandDiffFile", () => {
     const state = {
       "src/a.ts": { accepted: false, collapsed: false },
     };
+    // File is already expanded, so the same object reference is returned.
     expect(expandDiffFile(state, "src/a.ts")).toBe(state);
   });
 });

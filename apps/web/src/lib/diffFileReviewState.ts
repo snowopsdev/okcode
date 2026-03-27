@@ -6,7 +6,7 @@ export interface DiffFileReviewState {
 export type DiffFileReviewStateByPath = Record<string, DiffFileReviewState>;
 
 const DEFAULT_DIFF_FILE_REVIEW_STATE: DiffFileReviewState = {
-  collapsed: false,
+  collapsed: true,
   accepted: false,
 };
 
