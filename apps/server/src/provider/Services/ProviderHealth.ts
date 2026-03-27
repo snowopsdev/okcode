@@ -6,7 +6,7 @@
  *
  * @module ProviderHealth
  */
-import type { ServerProviderStatus } from "@t3tools/contracts";
+import type { ServerProviderStatus } from "@okcode/contracts";
 import { ServiceMap } from "effect";
 import type { Effect } from "effect";
 

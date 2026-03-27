@@ -30,7 +30,7 @@ import {
   type WsPushChannel,
   type WsPushMessage,
   type WsPush,
-} from "@t3tools/contracts";
+} from "@okcode/contracts";
 import { compileResolvedKeybindingRule, DEFAULT_KEYBINDINGS } from "./keybindings";
 import type {
   TerminalClearInput,
@@ -40,7 +40,7 @@ import type {
   TerminalResizeInput,
   TerminalSessionSnapshot,
   TerminalWriteInput,
-} from "@t3tools/contracts";
+} from "@okcode/contracts";
 import { TerminalManager, type TerminalManagerShape } from "./terminal/Services/Manager";
 import { makeSqlitePersistenceLive, SqlitePersistenceMemory } from "./persistence/Layers/Sqlite";
 import { SqlClient, SqlError } from "effect/unstable/sql";
@@ -498,7 +498,7 @@ describe("WebSocket Server", () => {
       throw new Error("Test server is already running");
     }
 
-    const baseDir = options.baseDir ?? makeTempDir("t3code-ws-base-");
+    const baseDir = options.baseDir ?? makeTempDir("okcode-ws-base-");
     const devUrl = options.devUrl ? new URL(options.devUrl) : undefined;
     const derivedPaths = deriveServerPathsSync(baseDir, devUrl);
     const scope = await Effect.runPromise(Scope.make("sequential"));
@@ -602,7 +602,7 @@ describe("WebSocket Server", () => {
   });
 
   it("serves persisted attachments from stateDir", async () => {
-    const baseDir = makeTempDir("t3code-state-attachments-");
+    const baseDir = makeTempDir("okcode-state-attachments-");
     const { attachmentsDir } = deriveServerPathsSync(baseDir, undefined);
     const attachmentPath = path.join(attachmentsDir, "thread-a", "message-a", "0.png");
     fs.mkdirSync(path.dirname(attachmentPath), { recursive: true });
@@ -621,7 +621,7 @@ describe("WebSocket Server", () => {
   });
 
   it("serves persisted attachments for URL-encoded paths", async () => {
-    const baseDir = makeTempDir("t3code-state-attachments-encoded-");
+    const baseDir = makeTempDir("okcode-state-attachments-encoded-");
     const { attachmentsDir } = deriveServerPathsSync(baseDir, undefined);
     const attachmentPath = path.join(
       attachmentsDir,
@@ -647,8 +647,8 @@ describe("WebSocket Server", () => {
   });
 
   it("serves static index for root path", async () => {
-    const baseDir = makeTempDir("t3code-state-static-root-");
-    const staticDir = makeTempDir("t3code-static-root-");
+    const baseDir = makeTempDir("okcode-state-static-root-");
+    const staticDir = makeTempDir("okcode-static-root-");
     fs.writeFileSync(path.join(staticDir, "index.html"), "<h1>static-root</h1>", "utf8");
 
     server = await createTestServer({ cwd: "/test/project", baseDir, staticDir });
@@ -662,8 +662,8 @@ describe("WebSocket Server", () => {
   });
 
   it("rejects static path traversal attempts", async () => {
-    const baseDir = makeTempDir("t3code-state-static-traversal-");
-    const staticDir = makeTempDir("t3code-static-traversal-");
+    const baseDir = makeTempDir("okcode-state-static-traversal-");
+    const staticDir = makeTempDir("okcode-static-traversal-");
     fs.writeFileSync(path.join(staticDir, "index.html"), "<h1>safe</h1>", "utf8");
 
     server = await createTestServer({ cwd: "/test/project", baseDir, staticDir });
@@ -744,7 +744,7 @@ describe("WebSocket Server", () => {
   });
 
   it("includes bootstrap ids in welcome when cwd project and thread already exist", async () => {
-    const baseDir = makeTempDir("t3code-state-bootstrap-existing-");
+    const baseDir = makeTempDir("okcode-state-bootstrap-existing-");
     const { dbPath } = deriveServerPathsSync(baseDir, undefined);
     const persistenceLayer = makeSqlitePersistenceLive(dbPath).pipe(
       Layer.provide(NodeServices.layer),
@@ -825,7 +825,7 @@ describe("WebSocket Server", () => {
   });
 
   it("responds to server.getConfig", async () => {
-    const baseDir = makeTempDir("t3code-state-get-config-");
+    const baseDir = makeTempDir("okcode-state-get-config-");
     const { keybindingsConfigPath: keybindingsPath } = deriveServerPathsSync(baseDir, undefined);
     ensureParentDir(keybindingsPath);
     fs.writeFileSync(keybindingsPath, "[]", "utf8");
@@ -851,7 +851,7 @@ describe("WebSocket Server", () => {
   });
 
   it("bootstraps default keybindings file when missing", async () => {
-    const baseDir = makeTempDir("t3code-state-bootstrap-keybindings-");
+    const baseDir = makeTempDir("okcode-state-bootstrap-keybindings-");
     const { keybindingsConfigPath: keybindingsPath } = deriveServerPathsSync(baseDir, undefined);
     expect(fs.existsSync(keybindingsPath)).toBe(false);
 
@@ -881,7 +881,7 @@ describe("WebSocket Server", () => {
   });
 
   it("falls back to defaults and reports malformed keybindings config issues", async () => {
-    const baseDir = makeTempDir("t3code-state-malformed-keybindings-");
+    const baseDir = makeTempDir("okcode-state-malformed-keybindings-");
     const { keybindingsConfigPath: keybindingsPath } = deriveServerPathsSync(baseDir, undefined);
     ensureParentDir(keybindingsPath);
     fs.writeFileSync(keybindingsPath, "{ not-json", "utf8");
@@ -913,7 +913,7 @@ describe("WebSocket Server", () => {
   });
 
   it("ignores invalid keybinding entries but keeps valid entries and reports issues", async () => {
-    const baseDir = makeTempDir("t3code-state-partial-invalid-keybindings-");
+    const baseDir = makeTempDir("okcode-state-partial-invalid-keybindings-");
     const { keybindingsConfigPath: keybindingsPath } = deriveServerPathsSync(baseDir, undefined);
     ensureParentDir(keybindingsPath);
     fs.writeFileSync(
@@ -965,7 +965,7 @@ describe("WebSocket Server", () => {
   });
 
   it("pushes server.configUpdated issues when keybindings file changes", async () => {
-    const baseDir = makeTempDir("t3code-state-keybindings-watch-");
+    const baseDir = makeTempDir("okcode-state-keybindings-watch-");
     const { keybindingsConfigPath: keybindingsPath } = deriveServerPathsSync(baseDir, undefined);
     ensureParentDir(keybindingsPath);
     fs.writeFileSync(keybindingsPath, "[]", "utf8");
@@ -1026,7 +1026,7 @@ describe("WebSocket Server", () => {
   });
 
   it("reads keybindings from the configured state directory", async () => {
-    const baseDir = makeTempDir("t3code-state-keybindings-");
+    const baseDir = makeTempDir("okcode-state-keybindings-");
     const { keybindingsConfigPath: keybindingsPath } = deriveServerPathsSync(baseDir, undefined);
     ensureParentDir(keybindingsPath);
     fs.writeFileSync(
@@ -1062,7 +1062,7 @@ describe("WebSocket Server", () => {
   });
 
   it("upserts keybinding rules and updates cached server config", async () => {
-    const baseDir = makeTempDir("t3code-state-upsert-keybinding-");
+    const baseDir = makeTempDir("okcode-state-upsert-keybinding-");
     const { keybindingsConfigPath: keybindingsPath } = deriveServerPathsSync(baseDir, undefined);
     ensureParentDir(keybindingsPath);
     fs.writeFileSync(
@@ -1184,7 +1184,7 @@ describe("WebSocket Server", () => {
     const [ws] = await connectAndAwaitWelcome(port);
     connections.push(ws);
 
-    const workspaceRoot = makeTempDir("t3code-ws-diff-project-");
+    const workspaceRoot = makeTempDir("okcode-ws-diff-project-");
     const createdAt = new Date().toISOString();
     const createProjectResponse = await sendRequest(ws, ORCHESTRATION_WS_METHODS.dispatchCommand, {
       type: "project.create",
@@ -1262,7 +1262,7 @@ describe("WebSocket Server", () => {
     const [ws] = await connectAndAwaitWelcome(port);
     connections.push(ws);
 
-    const workspaceRoot = makeTempDir("t3code-ws-project-");
+    const workspaceRoot = makeTempDir("okcode-ws-project-");
     const createdAt = new Date().toISOString();
     const createProjectResponse = await sendRequest(ws, ORCHESTRATION_WS_METHODS.dispatchCommand, {
       type: "project.create",
@@ -1342,7 +1342,7 @@ describe("WebSocket Server", () => {
   });
 
   it("routes terminal RPC methods and broadcasts terminal events", async () => {
-    const cwd = makeTempDir("t3code-ws-terminal-cwd-");
+    const cwd = makeTempDir("okcode-ws-terminal-cwd-");
     const terminalManager = new MockTerminalManager();
     server = await createTestServer({
       cwd: "/test",
@@ -1511,7 +1511,7 @@ describe("WebSocket Server", () => {
       await new Promise((resolve) => setTimeout(resolve, 50));
       expect(unhandledRejections).toHaveLength(0);
 
-      const workspace = makeTempDir("t3code-ws-handler-still-usable-");
+      const workspace = makeTempDir("okcode-ws-handler-still-usable-");
       fs.writeFileSync(path.join(workspace, "file.txt"), "ok\n", "utf8");
       const response = await sendRequest(ws, WS_METHODS.projectsSearchEntries, {
         cwd: workspace,
@@ -1560,7 +1560,7 @@ describe("WebSocket Server", () => {
   });
 
   it("supports projects.searchEntries", async () => {
-    const workspace = makeTempDir("t3code-ws-workspace-entries-");
+    const workspace = makeTempDir("okcode-ws-workspace-entries-");
     fs.mkdirSync(path.join(workspace, "src", "components"), { recursive: true });
     fs.writeFileSync(
       path.join(workspace, "src", "components", "Composer.tsx"),
@@ -1594,7 +1594,7 @@ describe("WebSocket Server", () => {
   });
 
   it("supports projects.writeFile within the workspace root", async () => {
-    const workspace = makeTempDir("t3code-ws-write-file-");
+    const workspace = makeTempDir("okcode-ws-write-file-");
 
     server = await createTestServer({ cwd: "/test" });
     const addr = server.address();
@@ -1619,7 +1619,7 @@ describe("WebSocket Server", () => {
   });
 
   it("rejects projects.writeFile paths outside the workspace root", async () => {
-    const workspace = makeTempDir("t3code-ws-write-file-reject-");
+    const workspace = makeTempDir("okcode-ws-write-file-reject-");
 
     server = await createTestServer({ cwd: "/test" });
     const addr = server.address();

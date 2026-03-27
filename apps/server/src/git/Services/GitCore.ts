@@ -20,7 +20,7 @@ import type {
   GitRemoveWorktreeInput,
   GitStatusInput,
   GitStatusResult,
-} from "@t3tools/contracts";
+} from "@okcode/contracts";
 
 import type { GitCommandError } from "../Errors.ts";
 

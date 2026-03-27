@@ -8,7 +8,7 @@
  */
 import { Config, Data, Effect, FileSystem, Layer, Option, Path, Schema, ServiceMap } from "effect";
 import { Command, Flag } from "effect/unstable/cli";
-import { NetService } from "@t3tools/shared/Net";
+import { NetService } from "@okcode/shared/Net";
 import {
   DEFAULT_PORT,
   deriveServerPaths,
