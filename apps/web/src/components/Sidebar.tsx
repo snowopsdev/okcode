@@ -1435,9 +1435,22 @@ export default function Sidebar() {
       if (selectedThreadIds.size > 0) {
         clearSelection();
       }
+      // When expanding a project with exactly one thread, navigate directly to it.
+      const project = projects.find((p) => p.id === projectId);
+      if (project && !project.expanded) {
+        const projectThreads = threads.filter((t) => t.projectId === projectId);
+        if (projectThreads.length === 1) {
+          toggleProject(projectId);
+          void navigate({
+            to: "/$threadId",
+            params: { threadId: projectThreads[0]!.id },
+          });
+          return;
+        }
+      }
       toggleProject(projectId);
     },
-    [clearSelection, selectedThreadIds.size, toggleProject],
+    [clearSelection, navigate, projects, selectedThreadIds.size, threads, toggleProject],
   );
 
   const handleProjectTitleKeyDown = useCallback(
@@ -1447,9 +1460,22 @@ export default function Sidebar() {
       if (dragInProgressRef.current) {
         return;
       }
+      // When expanding a project with exactly one thread, navigate directly to it.
+      const project = projects.find((p) => p.id === projectId);
+      if (project && !project.expanded) {
+        const projectThreads = threads.filter((t) => t.projectId === projectId);
+        if (projectThreads.length === 1) {
+          toggleProject(projectId);
+          void navigate({
+            to: "/$threadId",
+            params: { threadId: projectThreads[0]!.id },
+          });
+          return;
+        }
+      }
       toggleProject(projectId);
     },
-    [toggleProject],
+    [navigate, projects, threads, toggleProject],
   );
 
   useEffect(() => {
