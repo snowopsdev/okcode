@@ -3,13 +3,7 @@ import { FileDiff, type FileDiffMetadata, Virtualizer } from "@pierre/diffs/reac
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { ThreadId, type TurnId } from "@okcode/contracts";
-import {
-  CheckIcon,
-  ChevronDownIcon,
-  Columns2Icon,
-  Rows3Icon,
-  TextWrapIcon,
-} from "lucide-react";
+import { CheckIcon, ChevronDownIcon, Columns2Icon, Rows3Icon, TextWrapIcon } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { openInPreferredEditor } from "../editorPreferences";
 import { gitBranchesQueryOptions } from "~/lib/gitReactQuery";
@@ -565,7 +559,9 @@ export default function DiffPanel({ mode = "inline" }: DiffPanelProps) {
                 ? `Latest • ${formatShortTimestamp(selectedTurn.completedAt, settings.timestampFormat)}`
                 : `Change ${
                     selectedTurn?.checkpointTurnCount ??
-                    (selectedTurn ? inferredCheckpointTurnCountByTurnId[selectedTurn.turnId] : null) ??
+                    (selectedTurn
+                      ? inferredCheckpointTurnCountByTurnId[selectedTurn.turnId]
+                      : null) ??
                     "?"
                   } • ${selectedTurn ? formatShortTimestamp(selectedTurn.completedAt, settings.timestampFormat) : ""}`}
           </SelectButton>

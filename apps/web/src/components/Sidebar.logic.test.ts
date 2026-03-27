@@ -295,7 +295,7 @@ describe("resolveProjectStatusIndicator", () => {
 
 describe("getVisibleThreadsForProject", () => {
   it("includes the active thread even when it falls below the folded preview", () => {
-    const threads = Array.from({ length: 8 }, (_, index) =>
+    const threads = Array.from({ length: 12 }, (_, index) =>
       makeThread({
         id: ThreadId.makeUnsafe(`thread-${index + 1}`),
         title: `Thread ${index + 1}`,
@@ -304,9 +304,9 @@ describe("getVisibleThreadsForProject", () => {
 
     const result = getVisibleThreadsForProject({
       threads,
-      activeThreadId: ThreadId.makeUnsafe("thread-8"),
+      activeThreadId: ThreadId.makeUnsafe("thread-12"),
       isThreadListExpanded: false,
-      previewLimit: 6,
+      previewLimit: 10,
     });
 
     expect(result.hasHiddenThreads).toBe(true);
@@ -317,12 +317,16 @@ describe("getVisibleThreadsForProject", () => {
       ThreadId.makeUnsafe("thread-4"),
       ThreadId.makeUnsafe("thread-5"),
       ThreadId.makeUnsafe("thread-6"),
+      ThreadId.makeUnsafe("thread-7"),
       ThreadId.makeUnsafe("thread-8"),
+      ThreadId.makeUnsafe("thread-9"),
+      ThreadId.makeUnsafe("thread-10"),
+      ThreadId.makeUnsafe("thread-12"),
     ]);
   });
 
   it("returns all threads when the list is expanded", () => {
-    const threads = Array.from({ length: 8 }, (_, index) =>
+    const threads = Array.from({ length: 12 }, (_, index) =>
       makeThread({
         id: ThreadId.makeUnsafe(`thread-${index + 1}`),
       }),
@@ -330,9 +334,9 @@ describe("getVisibleThreadsForProject", () => {
 
     const result = getVisibleThreadsForProject({
       threads,
-      activeThreadId: ThreadId.makeUnsafe("thread-8"),
+      activeThreadId: ThreadId.makeUnsafe("thread-12"),
       isThreadListExpanded: true,
-      previewLimit: 6,
+      previewLimit: 10,
     });
 
     expect(result.hasHiddenThreads).toBe(true);

@@ -992,10 +992,7 @@ export default function GitActionsControl({ gitCwd, activeThreadId }: GitActions
                         {gitStatusForActions.conflictedFiles.length > 1 && (
                           <>
                             <MenuSeparator />
-                            <MenuItem
-                              className="text-xs"
-                              onClick={openConflictedFilesInEditor}
-                            >
+                            <MenuItem className="text-xs" onClick={openConflictedFilesInEditor}>
                               <ExternalLinkIcon className="size-3.5" />
                               Open all
                             </MenuItem>
