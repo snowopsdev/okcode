@@ -344,7 +344,7 @@ function SortableProjectItem({
         transform: CSS.Translate.toString(transform),
         transition,
       }}
-      className={`group/menu-item relative rounded-md ${
+      className={`group/menu-item relative rounded-md mt-1.5 first:mt-0 ${
         isDragging ? "z-20 opacity-80" : ""
       } ${isOver && !isDragging ? "ring-1 ring-primary/40" : ""}`}
       data-sidebar="menu-item"
@@ -1290,7 +1290,7 @@ export default function Sidebar() {
           <SidebarMenuButton
             ref={isManualProjectSorting ? dragHandleProps?.setActivatorNodeRef : undefined}
             size="sm"
-            className={`gap-2 px-2 py-1.5 text-left hover:bg-accent group-hover/project-header:bg-accent group-hover/project-header:text-sidebar-accent-foreground ${
+            className={`gap-2 px-2 py-2 text-left hover:bg-accent group-hover/project-header:bg-accent group-hover/project-header:text-sidebar-accent-foreground ${
               isManualProjectSorting ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"
             }`}
             {...(isManualProjectSorting && dragHandleProps ? dragHandleProps.attributes : {})}
@@ -1329,7 +1329,7 @@ export default function Sidebar() {
               />
             )}
             <ProjectFavicon cwd={project.cwd} />
-            <span className="flex-1 truncate text-xs font-medium text-foreground/90">
+            <span className="flex-1 truncate text-xs font-semibold tracking-[0.01em] text-foreground">
               {project.name}
             </span>
           </SidebarMenuButton>
@@ -1865,7 +1865,7 @@ export default function Sidebar() {
           ) : (
             <SidebarMenu ref={attachProjectListAutoAnimateRef}>
               {sortedProjects.map((project) => (
-                <SidebarMenuItem key={project.id} className="rounded-md">
+                <SidebarMenuItem key={project.id} className="rounded-md mt-1.5 first:mt-0">
                   {renderProjectItem(project, null)}
                 </SidebarMenuItem>
               ))}

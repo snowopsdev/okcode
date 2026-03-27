@@ -1,4 +1,4 @@
-import { ProjectId, type ThreadId } from "@okcode/contracts";
+import { type MessageId, ProjectId, type ThreadId } from "@okcode/contracts";
 import { type ChatMessage, type Thread } from "../types";
 import { randomUUID } from "~/lib/utils";
 import { type ComposerImageAttachment, type DraftThreadState } from "../composerDraftStore";
@@ -78,7 +78,7 @@ export type SendPhase = "idle" | "preparing-worktree" | "sending-turn";
 
 /** A message queued locally while the agent is busy processing a turn. */
 export interface QueuedMessage {
-  id: string;
+  id: MessageId;
   text: string;
   images: ComposerImageAttachment[];
   terminalContexts: TerminalContextDraft[];
