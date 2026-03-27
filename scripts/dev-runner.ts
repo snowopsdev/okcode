@@ -119,7 +119,7 @@ interface CreateDevRunnerEnvInput {
   readonly baseEnv: NodeJS.ProcessEnv;
   readonly serverOffset: number;
   readonly webOffset: number;
-  readonly t3Home: string | undefined;
+  readonly okcodeHome: string | undefined;
   readonly authToken: string | undefined;
   readonly noBrowser: boolean | undefined;
   readonly autoBootstrapProjectFromCwd: boolean | undefined;
@@ -134,7 +134,7 @@ export function createDevRunnerEnv({
   baseEnv,
   serverOffset,
   webOffset,
-  t3Home,
+  okcodeHome,
   authToken,
   noBrowser,
   autoBootstrapProjectFromCwd,
@@ -146,7 +146,7 @@ export function createDevRunnerEnv({
   return Effect.gen(function* () {
     const serverPort = port ?? BASE_SERVER_PORT + serverOffset;
     const webPort = BASE_WEB_PORT + webOffset;
-    const resolvedBaseDir = yield* resolveBaseDir(t3Home);
+    const resolvedBaseDir = yield* resolveBaseDir(okcodeHome);
 
     const output: NodeJS.ProcessEnv = {
       ...baseEnv,
@@ -334,7 +334,7 @@ export function resolveModePortOffsets<R = NetService>({
 
 interface DevRunnerCliInput {
   readonly mode: DevMode;
-  readonly t3Home: string | undefined;
+  readonly okcodeHome: string | undefined;
   readonly authToken: string | undefined;
   readonly noBrowser: boolean | undefined;
   readonly autoBootstrapProjectFromCwd: boolean | undefined;
@@ -414,7 +414,7 @@ export function runDevRunnerWithInput(input: DevRunnerCliInput) {
       baseEnv: process.env,
       serverOffset,
       webOffset,
-      t3Home: input.t3Home,
+      okcodeHome: input.okcodeHome,
       authToken: input.authToken,
       noBrowser: resolveOptionalBooleanOverride(input.noBrowser, envOverrides.noBrowser),
       autoBootstrapProjectFromCwd: resolveOptionalBooleanOverride(
@@ -484,7 +484,7 @@ const devRunnerCli = Command.make("dev-runner", {
   mode: Argument.choice("mode", DEV_RUNNER_MODES).pipe(
     Argument.withDescription("Development mode to run."),
   ),
-  t3Home: Flag.string("home-dir").pipe(
+  okcodeHome: Flag.string("home-dir").pipe(
     Flag.withDescription("Base directory for all OK Code data (equivalent to OKCODE_HOME)."),
     Flag.withFallbackConfig(optionalStringConfig("OKCODE_HOME")),
   ),

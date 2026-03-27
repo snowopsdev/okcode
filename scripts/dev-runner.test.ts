@@ -53,7 +53,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           baseEnv: {},
           serverOffset: 0,
           webOffset: 0,
-          t3Home: undefined,
+          okcodeHome: undefined,
           authToken: undefined,
           noBrowser: undefined,
           autoBootstrapProjectFromCwd: undefined,
@@ -74,7 +74,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           baseEnv: {},
           serverOffset: 0,
           webOffset: 0,
-          t3Home: "/tmp/custom-t3",
+          okcodeHome: "/tmp/custom-t3",
           authToken: "secret",
           noBrowser: true,
           autoBootstrapProjectFromCwd: false,
@@ -104,7 +104,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           },
           serverOffset: 0,
           webOffset: 0,
-          t3Home: undefined,
+          okcodeHome: undefined,
           authToken: undefined,
           noBrowser: undefined,
           autoBootstrapProjectFromCwd: undefined,
@@ -126,7 +126,7 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
           baseEnv: {},
           serverOffset: 0,
           webOffset: 0,
-          t3Home: undefined,
+          okcodeHome: undefined,
           authToken: undefined,
           noBrowser: undefined,
           autoBootstrapProjectFromCwd: undefined,
@@ -140,14 +140,14 @@ it.layer(NodeServices.layer)("dev-runner", (it) => {
       }),
     );
 
-    it.effect("uses custom t3Home when provided", () =>
+    it.effect("uses custom okcodeHome when provided", () =>
       Effect.gen(function* () {
         const env = yield* createDevRunnerEnv({
           mode: "dev",
           baseEnv: {},
           serverOffset: 0,
           webOffset: 0,
-          t3Home: "/tmp/my-t3",
+          okcodeHome: "/tmp/my-t3",
           authToken: undefined,
           noBrowser: undefined,
           autoBootstrapProjectFromCwd: undefined,

@@ -704,7 +704,7 @@ describe("TerminalManager", () => {
     };
 
     setEnv("PORT", "5173");
-    setEnv("T3CODE_PORT", "3773");
+    setEnv("OKCODE_PORT", "3773");
     setEnv("VITE_DEV_SERVER_URL", "http://localhost:5173");
     setEnv("TEST_TERMINAL_KEEP", "keep-me");
 
@@ -716,7 +716,7 @@ describe("TerminalManager", () => {
       if (!spawnInput) return;
 
       expect(spawnInput.env.PORT).toBeUndefined();
-      expect(spawnInput.env.T3CODE_PORT).toBeUndefined();
+      expect(spawnInput.env.OKCODE_PORT).toBeUndefined();
       expect(spawnInput.env.VITE_DEV_SERVER_URL).toBeUndefined();
       expect(spawnInput.env.TEST_TERMINAL_KEEP).toBe("keep-me");
 
@@ -731,8 +731,8 @@ describe("TerminalManager", () => {
     await manager.open(
       openInput({
         env: {
-          T3CODE_PROJECT_ROOT: "/repo",
-          T3CODE_WORKTREE_PATH: "/repo/worktree-a",
+          OKCODE_PROJECT_ROOT: "/repo",
+          OKCODE_WORKTREE_PATH: "/repo/worktree-a",
           CUSTOM_FLAG: "1",
         },
       }),
@@ -741,8 +741,8 @@ describe("TerminalManager", () => {
     expect(spawnInput).toBeDefined();
     if (!spawnInput) return;
 
-    expect(spawnInput.env.T3CODE_PROJECT_ROOT).toBe("/repo");
-    expect(spawnInput.env.T3CODE_WORKTREE_PATH).toBe("/repo/worktree-a");
+    expect(spawnInput.env.OKCODE_PROJECT_ROOT).toBe("/repo");
+    expect(spawnInput.env.OKCODE_WORKTREE_PATH).toBe("/repo/worktree-a");
     expect(spawnInput.env.CUSTOM_FLAG).toBe("1");
 
     manager.dispose();

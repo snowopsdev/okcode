@@ -195,15 +195,15 @@ const AzureTrustedSigningOptionsConfig = Config.all({
 });
 
 const BuildEnvConfig = Config.all({
-  platform: Config.schema(BuildPlatform, "T3CODE_DESKTOP_PLATFORM").pipe(Config.option),
-  target: Config.string("T3CODE_DESKTOP_TARGET").pipe(Config.option),
-  arch: Config.schema(BuildArch, "T3CODE_DESKTOP_ARCH").pipe(Config.option),
-  version: Config.string("T3CODE_DESKTOP_VERSION").pipe(Config.option),
-  outputDir: Config.string("T3CODE_DESKTOP_OUTPUT_DIR").pipe(Config.option),
-  skipBuild: Config.boolean("T3CODE_DESKTOP_SKIP_BUILD").pipe(Config.withDefault(false)),
-  keepStage: Config.boolean("T3CODE_DESKTOP_KEEP_STAGE").pipe(Config.withDefault(false)),
-  signed: Config.boolean("T3CODE_DESKTOP_SIGNED").pipe(Config.withDefault(false)),
-  verbose: Config.boolean("T3CODE_DESKTOP_VERBOSE").pipe(Config.withDefault(false)),
+  platform: Config.schema(BuildPlatform, "OKCODE_DESKTOP_PLATFORM").pipe(Config.option),
+  target: Config.string("OKCODE_DESKTOP_TARGET").pipe(Config.option),
+  arch: Config.schema(BuildArch, "OKCODE_DESKTOP_ARCH").pipe(Config.option),
+  version: Config.string("OKCODE_DESKTOP_VERSION").pipe(Config.option),
+  outputDir: Config.string("OKCODE_DESKTOP_OUTPUT_DIR").pipe(Config.option),
+  skipBuild: Config.boolean("OKCODE_DESKTOP_SKIP_BUILD").pipe(Config.withDefault(false)),
+  keepStage: Config.boolean("OKCODE_DESKTOP_KEEP_STAGE").pipe(Config.withDefault(false)),
+  signed: Config.boolean("OKCODE_DESKTOP_SIGNED").pipe(Config.withDefault(false)),
+  verbose: Config.boolean("OKCODE_DESKTOP_VERBOSE").pipe(Config.withDefault(false)),
 });
 
 const resolveBooleanFlag = (flag: Option.Option<boolean>, envValue: boolean) =>
@@ -426,7 +426,7 @@ function resolveGitHubPublishConfig():
     }
   | undefined {
   const rawRepo =
-    process.env.T3CODE_DESKTOP_UPDATE_REPOSITORY?.trim() ||
+    process.env.OKCODE_DESKTOP_UPDATE_REPOSITORY?.trim() ||
     process.env.GITHUB_REPOSITORY?.trim() ||
     "";
   if (!rawRepo) return undefined;
@@ -728,45 +728,45 @@ const buildDesktopArtifact = Effect.fn("buildDesktopArtifact")(function* (
 
 const buildDesktopArtifactCli = Command.make("build-desktop-artifact", {
   platform: Flag.choice("platform", BuildPlatform.literals).pipe(
-    Flag.withDescription("Build platform (env: T3CODE_DESKTOP_PLATFORM)."),
+    Flag.withDescription("Build platform (env: OKCODE_DESKTOP_PLATFORM)."),
     Flag.optional,
   ),
   target: Flag.string("target").pipe(
     Flag.withDescription(
-      "Artifact target, for example dmg/AppImage/nsis (env: T3CODE_DESKTOP_TARGET).",
+      "Artifact target, for example dmg/AppImage/nsis (env: OKCODE_DESKTOP_TARGET).",
     ),
     Flag.optional,
   ),
   arch: Flag.choice("arch", BuildArch.literals).pipe(
-    Flag.withDescription("Build arch, for example arm64/x64/universal (env: T3CODE_DESKTOP_ARCH)."),
+    Flag.withDescription("Build arch, for example arm64/x64/universal (env: OKCODE_DESKTOP_ARCH)."),
     Flag.optional,
   ),
   buildVersion: Flag.string("build-version").pipe(
-    Flag.withDescription("Artifact version metadata (env: T3CODE_DESKTOP_VERSION)."),
+    Flag.withDescription("Artifact version metadata (env: OKCODE_DESKTOP_VERSION)."),
     Flag.optional,
   ),
   outputDir: Flag.string("output-dir").pipe(
-    Flag.withDescription("Output directory for artifacts (env: T3CODE_DESKTOP_OUTPUT_DIR)."),
+    Flag.withDescription("Output directory for artifacts (env: OKCODE_DESKTOP_OUTPUT_DIR)."),
     Flag.optional,
   ),
   skipBuild: Flag.boolean("skip-build").pipe(
     Flag.withDescription(
-      "Skip `bun run build:desktop` and use existing dist artifacts (env: T3CODE_DESKTOP_SKIP_BUILD).",
+      "Skip `bun run build:desktop` and use existing dist artifacts (env: OKCODE_DESKTOP_SKIP_BUILD).",
     ),
     Flag.optional,
   ),
   keepStage: Flag.boolean("keep-stage").pipe(
-    Flag.withDescription("Keep temporary staging files (env: T3CODE_DESKTOP_KEEP_STAGE)."),
+    Flag.withDescription("Keep temporary staging files (env: OKCODE_DESKTOP_KEEP_STAGE)."),
     Flag.optional,
   ),
   signed: Flag.boolean("signed").pipe(
     Flag.withDescription(
-      "Enable signing/notarization discovery; Windows uses Azure Trusted Signing (env: T3CODE_DESKTOP_SIGNED).",
+      "Enable signing/notarization discovery; Windows uses Azure Trusted Signing (env: OKCODE_DESKTOP_SIGNED).",
     ),
     Flag.optional,
   ),
   verbose: Flag.boolean("verbose").pipe(
-    Flag.withDescription("Stream subprocess stdout (env: T3CODE_DESKTOP_VERBOSE)."),
+    Flag.withDescription("Stream subprocess stdout (env: OKCODE_DESKTOP_VERBOSE)."),
     Flag.optional,
   ),
 }).pipe(
