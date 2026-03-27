@@ -5,6 +5,33 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.3] - 2026-03-27
+
+See [docs/releases/v0.0.3.md](docs/releases/v0.0.3.md) for full notes and [docs/releases/v0.0.3/assets.md](docs/releases/v0.0.3/assets.md) for release asset inventory.
+
+### Added
+
+- Onboarding tour with default worktree mode for new threads; provider onboarding and doctor diagnostics.
+- Full-page code viewer with context mentions for workspace files.
+- Chat PR review route and component.
+- Terminal URLs can open in the preview panel or external browser.
+- Spotify player drawer integration in the web UI.
+- User message queuing while an agent turn is running.
+- Resizable plan sidebar.
+- Theme concepts documentation and branding/design-system reference.
+
+### Changed
+
+- Sidebar navigation refactored for cleaner routing logic.
+- Project sidebar spacing tightened; message IDs improved.
+- Release runbook expanded with workflow details.
+- Pre-commit setup enhanced; branding documentation refactored.
+- Discord link updated in README.
+
+### Fixed
+
+- Stop forwarding menu coordinates to the desktop bridge, fixing context-menu placement issues.
+
 ## [0.0.2] - 2026-03-27
 
 See [docs/releases/v0.0.2.md](docs/releases/v0.0.2.md) for full notes and [docs/releases/v0.0.2/assets.md](docs/releases/v0.0.2/assets.md) for release asset inventory.
@@ -31,5 +58,6 @@ First public version tag. See [docs/releases/v0.0.1.md](docs/releases/v0.0.1.md)
 - Published CLI npm package `okcode` aligned with this version (see `apps/server`).
 - Desktop installers and update metadata published via GitHub Releases when CI runs for tag `v0.0.1`.
 
+[0.0.3]: https://github.com/OpenKnots/okcode/releases/tag/v0.0.3
 [0.0.2]: https://github.com/OpenKnots/okcode/releases/tag/v0.0.2
 [0.0.1]: https://github.com/OpenKnots/okcode/releases/tag/v0.0.1

@@ -34,7 +34,10 @@ const ACCENT_STYLES: Record<string, { icon: string; dot: string }> = {
 };
 
 export function OnboardingStep({ step, icon }: { step: OnboardingStepConfig; icon: ReactNode }) {
-  const accent = ACCENT_STYLES[step.accentColor] ?? ACCENT_STYLES.primary;
+  const accent = ACCENT_STYLES[step.accentColor] ?? {
+    icon: "bg-primary/10 text-primary",
+    dot: "bg-primary/60",
+  };
 
   return (
     <div className="flex flex-col items-center text-center">
