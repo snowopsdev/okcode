@@ -49,7 +49,12 @@ export function useMutuallyExclusivePanels(
     prevDiffOpen.current = diffOpen;
     prevCodeViewerOpen.current = codeViewerOpen;
 
-    const action = resolveExclusivePanelAction(wasDiffOpen, diffOpen, wasCodeViewerOpen, codeViewerOpen);
+    const action = resolveExclusivePanelAction(
+      wasDiffOpen,
+      diffOpen,
+      wasCodeViewerOpen,
+      codeViewerOpen,
+    );
     if (action === "close-code-viewer") {
       closeCodeViewer();
     } else if (action === "close-diff") {
