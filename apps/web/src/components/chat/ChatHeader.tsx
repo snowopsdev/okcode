@@ -1,18 +1,26 @@
 import {
   type EditorId,
   type ProjectScript,
-  type ResolvedKeybindingsConfig,
   type ThreadId,
+  type ResolvedKeybindingsConfig,
 } from "@okcode/contracts";
 import { memo } from "react";
 import GitActionsControl from "../GitActionsControl";
-import { DiffIcon, MonitorIcon, TerminalSquareIcon } from "lucide-react";
+import {
+  ArrowLeftRightIcon,
+  ArrowUpDownIcon,
+  DiffIcon,
+  MonitorIcon,
+  TerminalSquareIcon,
+} from "lucide-react";
 import { Badge } from "../ui/badge";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
 import ProjectScriptsControl, { type NewProjectScriptInput } from "../ProjectScriptsControl";
 import { Toggle } from "../ui/toggle";
 import { SidebarTrigger } from "../ui/sidebar";
 import { OpenInPicker } from "./OpenInPicker";
+
+import type { PreviewDock } from "~/previewStateStore";
 
 interface ChatHeaderProps {
   activeThreadId: ThreadId;
@@ -30,6 +38,7 @@ interface ChatHeaderProps {
   diffToggleShortcutLabel: string | null;
   previewAvailable: boolean;
   previewOpen: boolean;
+  previewDock: PreviewDock;
   gitCwd: string | null;
   diffOpen: boolean;
   onRunProjectScript: (script: ProjectScript) => void;
@@ -39,6 +48,7 @@ interface ChatHeaderProps {
   onToggleTerminal: () => void;
   onToggleDiff: () => void;
   onTogglePreview: () => void;
+  onTogglePreviewLayout: () => void;
 }
 
 export const ChatHeader = memo(function ChatHeader({
@@ -57,6 +67,7 @@ export const ChatHeader = memo(function ChatHeader({
   diffToggleShortcutLabel,
   previewAvailable,
   previewOpen,
+  previewDock,
   gitCwd,
   diffOpen,
   onRunProjectScript,
@@ -66,6 +77,7 @@ export const ChatHeader = memo(function ChatHeader({
   onToggleTerminal,
   onToggleDiff,
   onTogglePreview,
+  onTogglePreviewLayout,
 }: ChatHeaderProps) {
   return (
     <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -132,6 +144,33 @@ export const ChatHeader = memo(function ChatHeader({
                 : "Toggle terminal drawer"}
           </TooltipPopup>
         </Tooltip>
+        {previewOpen && previewAvailable ? (
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Toggle
+                  className="shrink-0"
+                  pressed={previewDock === "top" || previewDock === "bottom"}
+                  onPressedChange={onTogglePreviewLayout}
+                  aria-label="Toggle preview split orientation"
+                  variant="outline"
+                  size="xs"
+                >
+                  {previewDock === "top" || previewDock === "bottom" ? (
+                    <ArrowUpDownIcon className="size-3" />
+                  ) : (
+                    <ArrowLeftRightIcon className="size-3" />
+                  )}
+                </Toggle>
+              }
+            />
+            <TooltipPopup side="bottom">
+              {previewDock === "top" || previewDock === "bottom"
+                ? "Switch to side-by-side preview"
+                : "Switch to stacked preview"}
+            </TooltipPopup>
+          </Tooltip>
+        ) : null}
         <Tooltip>
           <TooltipTrigger
             render={
