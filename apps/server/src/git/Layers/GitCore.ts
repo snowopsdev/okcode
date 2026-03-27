@@ -1124,7 +1124,7 @@ export const makeGitCore = (options?: { executeOverride?: GitCoreShape["execute"
           upstreamRef,
           hasWorkingTreeChanges,
           hasConflicts: conflictedFiles.size > 0,
-          conflictedFiles: Array.from(conflictedFiles).sort((a, b) => a.localeCompare(b)),
+          conflictedFiles: Array.from(conflictedFiles).toSorted((a, b) => a.localeCompare(b)),
           workingTree: {
             files,
             insertions,

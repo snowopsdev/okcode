@@ -71,7 +71,9 @@ function deriveLocalBranchNameCandidatesFromRemoteRef(
   return [...candidates];
 }
 
-export function filterSelectableBranches(branches: ReadonlyArray<GitBranch>): ReadonlyArray<GitBranch> {
+export function filterSelectableBranches(
+  branches: ReadonlyArray<GitBranch>,
+): ReadonlyArray<GitBranch> {
   return branches.filter((branch) => !branch.isRemote);
 }
 

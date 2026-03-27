@@ -1735,6 +1735,8 @@ describe("WebSocket Server", () => {
     const statusResult = {
       branch: "feature/test",
       hasWorkingTreeChanges: true,
+      hasConflicts: false,
+      conflictedFiles: [],
       workingTree: {
         files: [{ path: "src/index.ts", insertions: 7, deletions: 2 }],
         insertions: 7,

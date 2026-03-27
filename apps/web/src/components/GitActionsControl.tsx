@@ -651,6 +651,60 @@ export default function GitActionsControl({ gitCwd, activeThreadId }: GitActions
     });
   }, [allSelected, isCommitDialogOpen, dialogCommitMessage, selectedFiles]);
 
+  const conflictedFiles = useMemo(
+    () => gitStatusForActions?.conflictedFiles ?? [],
+    [gitStatusForActions?.conflictedFiles],
+  );
+
+  const openConflictedFilesInEditor = useCallback(() => {
+    if (!gitCwd || conflictedFiles.length === 0) {
+      toastManager.add({
+        type: "info",
+        title: "No conflicted files",
+        description: "Refresh git status if you recently resolved conflicts.",
+        data: threadToastData,
+      });
+      return;
+    }
+
+    const api = readNativeApi();
+    if (!api) {
+      toastManager.add({
+        type: "error",
+        title: "Editor opening is unavailable.",
+        data: threadToastData,
+      });
+      return;
+    }
+
+    const openPromise = (async () => {
+      for (const filePath of conflictedFiles) {
+        const target = resolvePathLinkTarget(filePath, gitCwd);
+        await openInPreferredEditor(api, target);
+      }
+      return conflictedFiles.length;
+    })();
+
+    toastManager.promise(openPromise, {
+      loading: { title: "Opening conflicted files...", data: threadToastData },
+      success: (count) => ({
+        title: count === 1 ? "Opened conflicted file" : "Opened conflicted files",
+        description:
+          count === 1
+            ? (conflictedFiles[0] ?? undefined)
+            : `${count} files opened in your editor.`,
+        data: threadToastData,
+      }),
+      error: (error) => ({
+        title: "Unable to open conflicted files",
+        description: error instanceof Error ? error.message : "An error occurred.",
+        data: threadToastData,
+      }),
+    });
+
+    void openPromise.catch(() => undefined);
+  }, [conflictedFiles, gitCwd, threadToastData]);
+
   const runQuickAction = useCallback(() => {
     if (quickAction.kind === "open_pr") {
       void openExistingPr();
@@ -693,13 +747,7 @@ export default function GitActionsControl({ gitCwd, activeThreadId }: GitActions
     if (quickAction.action) {
       void runGitActionWithToast({ action: quickAction.action });
     }
-  }, [
-    openConflictedFilesInEditor,
-    openExistingPr,
-    pullMutation,
-    quickAction,
-    threadToastData,
-  ]);
+  }, [openConflictedFilesInEditor, openExistingPr, pullMutation, quickAction, threadToastData]);
 
   const openDialogForMenuItem = useCallback(
     (item: GitActionMenuItem) => {
@@ -767,56 +815,6 @@ export default function GitActionsControl({ gitCwd, activeThreadId }: GitActions
     },
     [gitCwd, threadToastData],
   );
-
-  const openConflictedFilesInEditor = useCallback(() => {
-    const conflictedFiles = gitStatusForActions?.conflictedFiles ?? [];
-    if (!gitCwd || conflictedFiles.length === 0) {
-      toastManager.add({
-        type: "info",
-        title: "No conflicted files",
-        description: "Refresh git status if you recently resolved conflicts.",
-        data: threadToastData,
-      });
-      return;
-    }
-
-    const api = readNativeApi();
-    if (!api) {
-      toastManager.add({
-        type: "error",
-        title: "Editor opening is unavailable.",
-        data: threadToastData,
-      });
-      return;
-    }
-
-    const openPromise = (async () => {
-      for (const filePath of conflictedFiles) {
-        const target = resolvePathLinkTarget(filePath, gitCwd);
-        await openInPreferredEditor(api, target);
-      }
-      return conflictedFiles.length;
-    })();
-
-    toastManager.promise(openPromise, {
-      loading: { title: "Opening conflicted files...", data: threadToastData },
-      success: (count) => ({
-        title: count === 1 ? "Opened conflicted file" : "Opened conflicted files",
-        description:
-          count === 1
-            ? conflictedFiles[0] ?? undefined
-            : `${count} files opened in your editor.`,
-        data: threadToastData,
-      }),
-      error: (error) => ({
-        title: "Unable to open conflicted files",
-        description: error instanceof Error ? error.message : "An error occurred.",
-        data: threadToastData,
-      }),
-    });
-
-    void openPromise.catch(() => undefined);
-  }, [gitCwd, gitStatusForActions?.conflictedFiles, threadToastData]);
 
   if (!gitCwd) return null;
 
