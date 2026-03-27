@@ -106,4 +106,4 @@ Read [CONTRIBUTING.md](./CONTRIBUTING.md) before opening an issue or PR.
 
 ## Support
 
-Join the [Discord](https://discord.gg/jn4EGJjrvv).
+Join the [Discord](https://discord.gg/openknot).
