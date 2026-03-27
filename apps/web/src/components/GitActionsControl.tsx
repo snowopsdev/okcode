@@ -10,6 +10,7 @@ import {
   ChevronDownIcon,
   CircleAlertIcon,
   CloudUploadIcon,
+  ExternalLinkIcon,
   GitCommitIcon,
   InfoIcon,
 } from "lucide-react";
@@ -39,7 +40,16 @@ import {
   DialogTitle,
 } from "~/components/ui/dialog";
 import { Group, GroupSeparator } from "~/components/ui/group";
-import { Menu, MenuItem, MenuPopup, MenuTrigger } from "~/components/ui/menu";
+import {
+  Menu,
+  MenuItem,
+  MenuPopup,
+  MenuSeparator,
+  MenuSub,
+  MenuSubPopup,
+  MenuSubTrigger,
+  MenuTrigger,
+} from "~/components/ui/menu";
 import { Popover, PopoverPopup, PopoverTrigger } from "~/components/ui/popover";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import { Textarea } from "~/components/ui/textarea";
@@ -656,6 +666,42 @@ export default function GitActionsControl({ gitCwd, activeThreadId }: GitActions
     [gitStatusForActions?.conflictedFiles],
   );
 
+  const openConflictedFileInEditor = useCallback(
+    (filePath: string) => {
+      if (!gitCwd) return;
+
+      const api = readNativeApi();
+      if (!api) {
+        toastManager.add({
+          type: "error",
+          title: "Editor opening is unavailable.",
+          data: threadToastData,
+        });
+        return;
+      }
+
+      const target = resolvePathLinkTarget(filePath, gitCwd);
+      const openPromise = openInPreferredEditor(api, target);
+
+      toastManager.promise(openPromise, {
+        loading: { title: "Opening file...", data: threadToastData },
+        success: () => ({
+          title: "Opened conflicted file",
+          description: filePath,
+          data: threadToastData,
+        }),
+        error: (error) => ({
+          title: "Unable to open file",
+          description: error instanceof Error ? error.message : "An error occurred.",
+          data: threadToastData,
+        }),
+      });
+
+      void openPromise.catch(() => undefined);
+    },
+    [gitCwd, threadToastData],
+  );
+
   const openConflictedFilesInEditor = useCallback(() => {
     if (!gitCwd || conflictedFiles.length === 0) {
       toastManager.add({
@@ -925,14 +971,40 @@ export default function GitActionsControl({ gitCwd, activeThreadId }: GitActions
                 </p>
               )}
               {gitStatusForActions?.hasConflicts && (
-                <div className="space-y-2 px-2 py-2">
+                <div className="space-y-1 px-2 py-2">
                   <p className="text-warning text-xs">
                     Resolve merge conflicts before committing, pulling, pushing, or opening a PR.
                   </p>
                   {gitStatusForActions.conflictedFiles.length > 0 ? (
-                    <Button size="xs" variant="outline" onClick={openConflictedFilesInEditor}>
-                      Open conflicted files
-                    </Button>
+                    <MenuSub>
+                      <MenuSubTrigger className="text-xs">
+                        <CircleAlertIcon className="size-3.5 text-warning" />
+                        Conflicted files ({gitStatusForActions.conflictedFiles.length})
+                      </MenuSubTrigger>
+                      <MenuSubPopup>
+                        {gitStatusForActions.conflictedFiles.map((filePath) => (
+                          <MenuItem
+                            key={filePath}
+                            className="font-mono text-xs"
+                            onClick={() => openConflictedFileInEditor(filePath)}
+                          >
+                            {filePath.split("/").pop()}
+                          </MenuItem>
+                        ))}
+                        {gitStatusForActions.conflictedFiles.length > 1 && (
+                          <>
+                            <MenuSeparator />
+                            <MenuItem
+                              className="text-xs"
+                              onClick={openConflictedFilesInEditor}
+                            >
+                              <ExternalLinkIcon className="size-3.5" />
+                              Open all
+                            </MenuItem>
+                          </>
+                        )}
+                      </MenuSubPopup>
+                    </MenuSub>
                   ) : null}
                 </div>
               )}

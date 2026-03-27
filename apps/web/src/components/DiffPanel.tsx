@@ -6,20 +6,11 @@ import { ThreadId, type TurnId } from "@okcode/contracts";
 import {
   CheckIcon,
   ChevronDownIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
   Columns2Icon,
   Rows3Icon,
   TextWrapIcon,
 } from "lucide-react";
-import {
-  type WheelEvent as ReactWheelEvent,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { openInPreferredEditor } from "../editorPreferences";
 import { gitBranchesQueryOptions } from "~/lib/gitReactQuery";
 import { checkpointDiffQueryOptions } from "~/lib/providerReactQuery";
@@ -44,6 +35,7 @@ import { formatShortTimestamp } from "../timestampFormat";
 import { DiffPanelLoadingState, DiffPanelShell, type DiffPanelMode } from "./DiffPanelShell";
 import { DiffStatLabel, hasNonZeroStat } from "./chat/DiffStatLabel";
 import { Button } from "./ui/button";
+import { Select, SelectButton, SelectItem, SelectPopup } from "./ui/select";
 import { ToggleGroup, Toggle } from "./ui/toggle-group";
 
 type DiffRenderMode = "stacked" | "split";
@@ -288,10 +280,7 @@ export default function DiffPanel({ mode = "inline" }: DiffPanelProps) {
   const [diffRenderMode, setDiffRenderMode] = useState<DiffRenderMode>("stacked");
   const [diffWordWrap, setDiffWordWrap] = useState(settings.diffWordWrap);
   const patchViewportRef = useRef<HTMLDivElement>(null);
-  const turnStripRef = useRef<HTMLDivElement>(null);
   const previousDiffOpenRef = useRef(false);
-  const [canScrollTurnStripLeft, setCanScrollTurnStripLeft] = useState(false);
-  const [canScrollTurnStripRight, setCanScrollTurnStripRight] = useState(false);
   const [reviewStateBySelectionKey, setReviewStateBySelectionKey] = useState<
     Record<string, DiffFileReviewStateByPath>
   >({});
@@ -553,153 +542,39 @@ export default function DiffPanel({ mode = "inline" }: DiffPanelProps) {
       },
     });
   };
-  const updateTurnStripScrollState = useCallback(() => {
-    const element = turnStripRef.current;
-    if (!element) {
-      setCanScrollTurnStripLeft(false);
-      setCanScrollTurnStripRight(false);
-      return;
-    }
-
-    const maxScrollLeft = Math.max(0, element.scrollWidth - element.clientWidth);
-    setCanScrollTurnStripLeft(element.scrollLeft > 4);
-    setCanScrollTurnStripRight(element.scrollLeft < maxScrollLeft - 4);
-  }, []);
-  const scrollTurnStripBy = useCallback((offset: number) => {
-    const element = turnStripRef.current;
-    if (!element) return;
-    element.scrollBy({ left: offset, behavior: "smooth" });
-  }, []);
-  const onTurnStripWheel = useCallback((event: ReactWheelEvent<HTMLDivElement>) => {
-    const element = turnStripRef.current;
-    if (!element) return;
-    if (element.scrollWidth <= element.clientWidth + 1) return;
-    if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
-
-    event.preventDefault();
-    element.scrollBy({ left: event.deltaY, behavior: "auto" });
-  }, []);
-
-  useEffect(() => {
-    const element = turnStripRef.current;
-    if (!element) return;
-
-    const frameId = window.requestAnimationFrame(() => updateTurnStripScrollState());
-    const onScroll = () => updateTurnStripScrollState();
-
-    element.addEventListener("scroll", onScroll, { passive: true });
-
-    const resizeObserver = new ResizeObserver(() => updateTurnStripScrollState());
-    resizeObserver.observe(element);
-
-    return () => {
-      window.cancelAnimationFrame(frameId);
-      element.removeEventListener("scroll", onScroll);
-      resizeObserver.disconnect();
-    };
-  }, [updateTurnStripScrollState]);
-
-  useEffect(() => {
-    const frameId = window.requestAnimationFrame(() => updateTurnStripScrollState());
-    return () => {
-      window.cancelAnimationFrame(frameId);
-    };
-  }, [orderedTurnDiffSummaries, selectedTurnId, updateTurnStripScrollState]);
-
-  useEffect(() => {
-    const element = turnStripRef.current;
-    if (!element) return;
-
-    const selectedChip = element.querySelector<HTMLElement>("[data-turn-chip-selected='true']");
-    selectedChip?.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
-  }, [selectedTurn?.turnId, selectedTurnId]);
+  const turnSelectValue = selectedTurnId ?? "all";
+  const handleTurnSelectChange = useCallback(
+    (value: string | null) => {
+      if (value === "all" || value === null) {
+        selectWholeConversation();
+      } else {
+        selectTurn(value as TurnId);
+      }
+    },
+    [selectTurn, selectWholeConversation],
+  );
 
   const headerRow = (
     <>
-      <div className="relative min-w-0 flex-1 [-webkit-app-region:no-drag]">
-        {canScrollTurnStripLeft && (
-          <div className="pointer-events-none absolute inset-y-0 left-8 z-10 w-7 bg-linear-to-r from-card to-transparent" />
-        )}
-        {canScrollTurnStripRight && (
-          <div className="pointer-events-none absolute inset-y-0 right-8 z-10 w-7 bg-linear-to-l from-card to-transparent" />
-        )}
-        <button
-          type="button"
-          className={cn(
-            "absolute left-0 top-1/2 z-20 inline-flex size-6 -translate-y-1/2 items-center justify-center rounded-md border bg-background/90 text-muted-foreground transition-colors",
-            canScrollTurnStripLeft
-              ? "border-border/70 hover:border-border hover:text-foreground"
-              : "cursor-not-allowed border-border/40 text-muted-foreground/40",
-          )}
-          onClick={() => scrollTurnStripBy(-180)}
-          disabled={!canScrollTurnStripLeft}
-          aria-label="Scroll change list left"
-        >
-          <ChevronLeftIcon className="size-3.5" />
-        </button>
-        <button
-          type="button"
-          className={cn(
-            "absolute right-0 top-1/2 z-20 inline-flex size-6 -translate-y-1/2 items-center justify-center rounded-md border bg-background/90 text-muted-foreground transition-colors",
-            canScrollTurnStripRight
-              ? "border-border/70 hover:border-border hover:text-foreground"
-              : "cursor-not-allowed border-border/40 text-muted-foreground/40",
-          )}
-          onClick={() => scrollTurnStripBy(180)}
-          disabled={!canScrollTurnStripRight}
-          aria-label="Scroll change list right"
-        >
-          <ChevronRightIcon className="size-3.5" />
-        </button>
-        <div
-          ref={turnStripRef}
-          className="turn-chip-strip flex gap-1 overflow-x-auto px-8 py-0.5"
-          onWheel={onTurnStripWheel}
-        >
-          <button
-            type="button"
-            className="shrink-0 rounded-md"
-            onClick={selectWholeConversation}
-            data-turn-chip-selected={selectedTurnId === null}
-          >
-            <div
-              className={cn(
-                "rounded-md border px-2 py-1 text-left transition-colors",
-                selectedTurnId === null
-                  ? "border-border bg-accent text-accent-foreground"
-                  : "border-border/70 bg-background/70 text-muted-foreground/80 hover:border-border hover:text-foreground/80",
-              )}
-            >
-              <div className="text-[10px] leading-tight font-medium">All changes</div>
-            </div>
-          </button>
-          {orderedTurnDiffSummaries.map((summary) => (
-            <button
-              key={summary.turnId}
-              type="button"
-              className="shrink-0 rounded-md"
-              onClick={() => selectTurn(summary.turnId)}
-              title={`${
-                summary.turnId === latestSelectedTurnId
-                  ? "Latest change"
-                  : `Change ${
-                      summary.checkpointTurnCount ??
-                      inferredCheckpointTurnCountByTurnId[summary.turnId] ??
-                      "?"
-                    }`
-              } • ${formatShortTimestamp(summary.completedAt, settings.timestampFormat)}`}
-              data-turn-chip-selected={summary.turnId === selectedTurn?.turnId}
-            >
-              <div
-                className={cn(
-                  "rounded-md border px-2 py-1 text-left transition-colors",
-                  summary.turnId === selectedTurn?.turnId
-                    ? "border-border bg-accent text-accent-foreground"
-                    : "border-border/70 bg-background/70 text-muted-foreground/80 hover:border-border hover:text-foreground/80",
-                )}
-              >
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-[10px] leading-tight font-medium">
+      <div className="min-w-0 flex-1 [-webkit-app-region:no-drag]">
+        <Select value={turnSelectValue} onValueChange={handleTurnSelectChange}>
+          <SelectButton size="xs" variant="ghost">
+            {selectedTurnId === null
+              ? "All changes"
+              : selectedTurn?.turnId === latestSelectedTurnId
+                ? `Latest • ${formatShortTimestamp(selectedTurn.completedAt, settings.timestampFormat)}`
+                : `Change ${
+                    selectedTurn?.checkpointTurnCount ??
+                    (selectedTurn ? inferredCheckpointTurnCountByTurnId[selectedTurn.turnId] : null) ??
+                    "?"
+                  } • ${selectedTurn ? formatShortTimestamp(selectedTurn.completedAt, settings.timestampFormat) : ""}`}
+          </SelectButton>
+          <SelectPopup>
+            <SelectItem value="all">All changes</SelectItem>
+            {orderedTurnDiffSummaries.map((summary) => (
+              <SelectItem key={summary.turnId} value={summary.turnId}>
+                <span className="flex items-center justify-between gap-3">
+                  <span>
                     {summary.turnId === latestSelectedTurnId
                       ? "Latest"
                       : `Change ${
@@ -708,14 +583,14 @@ export default function DiffPanel({ mode = "inline" }: DiffPanelProps) {
                           "?"
                         }`}
                   </span>
-                  <span className="text-[9px] leading-tight opacity-60">
+                  <span className="text-muted-foreground text-xs">
                     {formatShortTimestamp(summary.completedAt, settings.timestampFormat)}
                   </span>
-                </div>
-              </div>
-            </button>
-          ))}
-        </div>
+                </span>
+              </SelectItem>
+            ))}
+          </SelectPopup>
+        </Select>
       </div>
       <div className="flex shrink-0 items-center gap-1 [-webkit-app-region:no-drag]">
         <ToggleGroup
