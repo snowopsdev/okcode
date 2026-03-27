@@ -391,7 +391,7 @@ describe("wsNativeApi", () => {
     });
   });
 
-  it("forwards context menu metadata to desktop bridge", async () => {
+  it("forwards context menu items to desktop bridge without position", async () => {
     const showContextMenu = vi.fn().mockResolvedValue("delete");
     Object.defineProperty(getWindowForTest(), "desktopBridge", {
       configurable: true,
@@ -411,13 +411,13 @@ describe("wsNativeApi", () => {
       { x: 200, y: 300 },
     );
 
-    expect(showContextMenu).toHaveBeenCalledWith(
-      [
-        { id: "rename", label: "Rename thread" },
-        { id: "delete", label: "Delete", destructive: true },
-      ],
-      { x: 200, y: 300 },
-    );
+    // Position is intentionally not forwarded to the desktop bridge;
+    // Electron's Menu.popup() uses the current mouse cursor position
+    // which avoids coordinate-space mismatches.
+    expect(showContextMenu).toHaveBeenCalledWith([
+      { id: "rename", label: "Rename thread" },
+      { id: "delete", label: "Delete", destructive: true },
+    ]);
   });
 
   it("uses fallback context menu when desktop bridge is unavailable", async () => {
