@@ -72,6 +72,6 @@ describe("sidebar interactive cursors", () => {
     expect(html).toContain("--sidebar-background-opacity:0.4");
     expect(html).toContain("background-color:color-mix");
     expect(html).toContain("border-color:color-mix");
-    expect(html).not.toContain("opacity:0.4");
+    expect(html).not.toContain('style="opacity:0.4');
   });
 });

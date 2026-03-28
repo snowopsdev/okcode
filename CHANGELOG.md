@@ -11,6 +11,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - CLI npm package name is `okcodes`. Install with `npm install -g okcodes`; the `okcode` binary name is unchanged.
 
+## [0.0.5] - 2026-03-28
+
+See [docs/releases/v0.0.5.md](docs/releases/v0.0.5.md) for full notes and [docs/releases/v0.0.5/assets.md](docs/releases/v0.0.5/assets.md) for release asset inventory.
+
+### Added
+
+- Add mobile companion shell and deep-link pairing.
+- Add branch sync action to git controls.
+- Add merge conflict workflow and navigation.
+- Add structured Git action failures and retry UI.
+- Add PR review filters and scoped workspace.
+- Add PR review features and conflict resolution.
+- Send terminal selections directly from the composer.
+- Open chat file links in the viewer or editor.
+- Add package script defaults and import flow.
+- Add viewport-aware preview bounds projection.
+- Add markdown preview rendering.
+
+### Changed
+
+- Update dependencies and enhance UI components.
+- Enhance release workflow and update asset documentation for v0.0.4.
+
 ## [0.0.4] - 2026-03-27
 
 See [docs/releases/v0.0.4.md](docs/releases/v0.0.4.md) for full notes and [docs/releases/v0.0.4/assets.md](docs/releases/v0.0.4/assets.md) for release asset inventory.
@@ -98,3 +121,4 @@ First public version tag. See [docs/releases/v0.0.1.md](docs/releases/v0.0.1.md)
 [0.0.3]: https://github.com/OpenKnots/okcode/releases/tag/v0.0.3
 [0.0.2]: https://github.com/OpenKnots/okcode/releases/tag/v0.0.2
 [0.0.1]: https://github.com/OpenKnots/okcode/releases/tag/v0.0.1
+[0.0.5]: https://github.com/OpenKnots/okcode/releases/tag/v0.0.5

@@ -48,12 +48,19 @@ const subscribeMock = vi.fn<
     }
   };
 });
+const subscribeStateMock = vi.fn<(listener: (state: string) => void) => () => void>((listener) => {
+  listener("connecting");
+  return () => {};
+});
+const getStateMock = vi.fn<() => string>(() => "connecting");
 
 vi.mock("./wsTransport", () => {
   return {
     WsTransport: class MockWsTransport {
       request = requestMock;
       subscribe = subscribeMock;
+      subscribeState = subscribeStateMock;
+      getState = getStateMock;
       getLatestPush(channel: string) {
         return latestPushByChannel.get(channel) ?? null;
       }
@@ -107,6 +114,8 @@ beforeEach(() => {
   requestMock.mockReset();
   showContextMenuFallbackMock.mockReset();
   subscribeMock.mockClear();
+  subscribeStateMock.mockClear();
+  getStateMock.mockClear();
   channelListeners.clear();
   latestPushByChannel.clear();
   nextPushSequence = 1;

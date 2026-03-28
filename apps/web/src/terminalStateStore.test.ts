@@ -1,15 +1,33 @@
 import { ThreadId } from "@okcode/contracts";
 import { beforeEach, describe, expect, it } from "vitest";
+import { createJSONStorage } from "zustand/middleware";
 
 import { selectThreadTerminalState, useTerminalStateStore } from "./terminalStateStore";
 
 const THREAD_ID = ThreadId.makeUnsafe("thread-1");
 
+const memoryStorage = (() => {
+  const store = new Map<string, string>();
+  return {
+    getItem: (key: string) => store.get(key) ?? null,
+    setItem: (key: string, value: string) => {
+      store.set(key, value);
+    },
+    removeItem: (key: string) => {
+      store.delete(key);
+    },
+    clear: () => {
+      store.clear();
+    },
+  };
+})();
+
 describe("terminalStateStore actions", () => {
   beforeEach(() => {
-    if (typeof localStorage !== "undefined") {
-      localStorage.clear();
-    }
+    useTerminalStateStore.persist.setOptions({
+      storage: createJSONStorage(() => memoryStorage),
+    });
+    memoryStorage.clear();
     useTerminalStateStore.setState({ terminalStateByThreadId: {} });
   });
 

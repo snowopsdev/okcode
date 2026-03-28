@@ -4,6 +4,7 @@ Human-readable notes and asset inventories for tagged releases.
 
 | Version            | Notes                                       | Assets                       |
 | ------------------ | ------------------------------------------- | ---------------------------- |
+| [0.0.5](v0.0.5.md) | Git workflows, PR review, mobile shell      | [manifest](v0.0.5/assets.md) |
 | [0.0.4](v0.0.4.md) | PR review, desktop preview, release tooling | [manifest](v0.0.4/assets.md) |
 | [0.0.3](v0.0.3.md) | Onboarding, code viewer, PRs                | [manifest](v0.0.3/assets.md) |
 | [0.0.2](v0.0.2.md) | Patch release                               | [manifest](v0.0.2/assets.md) |
