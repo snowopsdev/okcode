@@ -560,6 +560,8 @@ git push origin vX.Y.Z
   ```bash
   bun run dist:desktop:dmg:arm64   # macOS Apple Silicon
   bun run dist:desktop:dmg:x64     # macOS Intel
+  bun run dist:desktop:dmg:arm64:signed   # same + Developer ID sign + notarize (export Apple secrets locally)
+  bun run dist:desktop:dmg:x64:signed
   bun run dist:desktop:linux        # Linux AppImage
   bun run dist:desktop:win          # Windows NSIS
   ```
