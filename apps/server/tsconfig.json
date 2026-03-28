@@ -14,7 +14,7 @@
           "importFromBarrel": "error",
           "anyUnknownInErrorContext": "warning",
           "instanceOfSchema": "warning",
-          "deterministicKeys": "warning",
+          "deterministicKeys": "off",
           "preferSchemaOverJson": "off",
           "globalErrorInEffectFailure": "off"
         }
