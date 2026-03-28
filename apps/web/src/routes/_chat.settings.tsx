@@ -546,9 +546,7 @@ function SettingsRouteView() {
                   settings.sidebarOpacity !== defaults.sidebarOpacity ? (
                     <SettingResetButton
                       label="sidebar opacity"
-                      onClick={() =>
-                        updateSettings({ sidebarOpacity: defaults.sidebarOpacity })
-                      }
+                      onClick={() => updateSettings({ sidebarOpacity: defaults.sidebarOpacity })}
                     />
                   ) : null
                 }

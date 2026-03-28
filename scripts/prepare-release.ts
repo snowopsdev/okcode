@@ -40,12 +40,7 @@
  */
 
 import { execFileSync, execSync } from "node:child_process";
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createInterface } from "node:readline";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -103,7 +98,10 @@ function prompt(question: string): Promise<string> {
 // ---------------------------------------------------------------------------
 
 function gitPreviousTag(rootDir: string): string | undefined {
-  const tags = run("git", ["tag", "-l", "--sort=-v:refname", "v*.*.*"], { cwd: rootDir, silent: true });
+  const tags = run("git", ["tag", "-l", "--sort=-v:refname", "v*.*.*"], {
+    cwd: rootDir,
+    silent: true,
+  });
   if (!tags) return undefined;
   return tags.split("\n")[0];
 }
@@ -146,16 +144,28 @@ function categorizeCommits(messages: string[]): CategorizedCommits {
   for (const raw of messages) {
     // Strip conventional-commit prefix for the changelog entry
     const msg = raw
-      .replace(/^(feat|fix|chore|refactor|docs|style|test|perf|ci|build|revert)(\([^)]*\))?:\s*/i, "")
+      .replace(
+        /^(feat|fix|chore|refactor|docs|style|test|perf|ci|build|revert)(\([^)]*\))?:\s*/i,
+        "",
+      )
       .replace(/\s*\(#\d+\)\s*$/, ""); // strip PR number suffix
 
     const lower = raw.toLowerCase();
 
     if (/^(feat|add)/i.test(lower) || lower.includes("add ") || lower.includes("introduce")) {
       result.added.push(msg);
-    } else if (/^fix/i.test(lower) || lower.includes("fix ") || lower.includes("repair") || lower.includes("resolve")) {
+    } else if (
+      /^fix/i.test(lower) ||
+      lower.includes("fix ") ||
+      lower.includes("repair") ||
+      lower.includes("resolve")
+    ) {
       result.fixed.push(msg);
-    } else if (/^(remove|delete|drop)/i.test(lower) || lower.includes("remove ") || lower.includes("delete ")) {
+    } else if (
+      /^(remove|delete|drop)/i.test(lower) ||
+      lower.includes("remove ") ||
+      lower.includes("delete ")
+    ) {
       result.removed.push(msg);
     } else if (/^(refactor|chore|docs|style|perf|ci|build)/i.test(lower)) {
       result.changed.push(msg);
@@ -175,7 +185,9 @@ function generateChangelogSection(version: string, commits: CategorizedCommits):
   const lines: string[] = [];
   lines.push(`## [${version}] - ${today()}`);
   lines.push("");
-  lines.push(`See [docs/releases/v${version}.md](docs/releases/v${version}.md) for full notes and [docs/releases/v${version}/assets.md](docs/releases/v${version}/assets.md) for release asset inventory.`);
+  lines.push(
+    `See [docs/releases/v${version}.md](docs/releases/v${version}.md) for full notes and [docs/releases/v${version}/assets.md](docs/releases/v${version}/assets.md) for release asset inventory.`,
+  );
 
   if (commits.added.length > 0) {
     lines.push("");
@@ -303,7 +315,12 @@ SHA-256 checksums are not committed here; verify downloads via GitHub's release 
 // File mutation helpers
 // ---------------------------------------------------------------------------
 
-function updateChangelog(rootDir: string, version: string, section: string, prevTag: string | undefined): void {
+function updateChangelog(
+  rootDir: string,
+  version: string,
+  section: string,
+  prevTag: string | undefined,
+): void {
   const changelogPath = resolve(rootDir, "CHANGELOG.md");
   let content = readFileSync(changelogPath, "utf8");
 
@@ -317,12 +334,7 @@ function updateChangelog(rootDir: string, version: string, section: string, prev
   const afterUnreleased = content.indexOf("\n## [", unreleasedIndex + 1);
   const insertAt = afterUnreleased !== -1 ? afterUnreleased : content.length;
 
-  content =
-    content.slice(0, insertAt) +
-    "\n" +
-    section +
-    "\n" +
-    content.slice(insertAt);
+  content = content.slice(0, insertAt) + "\n" + section + "\n" + content.slice(insertAt);
 
   // Add the version comparison link at the bottom
   const compareBase = prevTag ? prevTag : `v${version}`;
@@ -353,11 +365,7 @@ function updateReleasesReadme(rootDir: string, version: string, shortDescription
   const insertAfter = content.indexOf("\n", match.index);
   const newRow = `| [${version}](v${version}.md) | ${shortDescription} | [manifest](v${version}/assets.md) |`;
 
-  content =
-    content.slice(0, insertAfter + 1) +
-    newRow +
-    "\n" +
-    content.slice(insertAfter + 1);
+  content = content.slice(0, insertAfter + 1) + newRow + "\n" + content.slice(insertAfter + 1);
 
   writeFileSync(readmePath, content);
 }
@@ -527,7 +535,10 @@ async function main(): Promise<void> {
   log("==>", `${commits.length} commit(s) since ${prevTag ?? "beginning"}`);
 
   const categorized = categorizeCommits(commits);
-  log("   ", `  Added: ${categorized.added.length}, Changed: ${categorized.changed.length}, Fixed: ${categorized.fixed.length}, Removed: ${categorized.removed.length}, Other: ${categorized.other.length}`);
+  log(
+    "   ",
+    `  Added: ${categorized.added.length}, Changed: ${categorized.changed.length}, Fixed: ${categorized.fixed.length}, Removed: ${categorized.removed.length}, Other: ${categorized.other.length}`,
+  );
   console.log("");
 
   // --- Resolve summary ---------------------------------------------------
@@ -541,9 +552,7 @@ async function main(): Promise<void> {
       .filter(Boolean)
       .join(", ");
 
-    const defaultSummary = autoSummary
-      ? `Release with ${autoSummary}.`
-      : `Release ${tag}.`;
+    const defaultSummary = autoSummary ? `Release with ${autoSummary}.` : `Release ${tag}.`;
 
     if (process.stdin.isTTY && !dryRun) {
       const input = await prompt(`  Release summary [${defaultSummary}]: `);
@@ -628,7 +637,10 @@ async function main(): Promise<void> {
       log("--", `Would create tag: ${tag}`);
       log("--", `Would push tag: ${tag}`);
       if (fullMatrix) {
-        log("--", `Would trigger full-matrix release via: gh workflow run release.yml -f version=${version} -f mac_arm64_only=false`);
+        log(
+          "--",
+          `Would trigger full-matrix release via: gh workflow run release.yml -f version=${version} -f mac_arm64_only=false`,
+        );
       }
     } else {
       log("--", "Skipping commit/tag/push (--skip-commit).");
@@ -646,11 +658,10 @@ async function main(): Promise<void> {
     execFileSync("git", ["add", ...filesToStage], { cwd: rootDir, stdio: "inherit" });
 
     log("==>", "Committing...");
-    execFileSync(
-      "git",
-      ["commit", "-m", `docs(release): prepare release notes for v${version}`],
-      { cwd: rootDir, stdio: "inherit" },
-    );
+    execFileSync("git", ["commit", "-m", `docs(release): prepare release notes for v${version}`], {
+      cwd: rootDir,
+      stdio: "inherit",
+    });
     log("OK", "Committed release documentation.");
 
     // Push the commit to main
@@ -672,13 +683,27 @@ async function main(): Promise<void> {
       try {
         execFileSync(
           "gh",
-          ["workflow", "run", "release.yml", "-f", `version=${version}`, "-f", "mac_arm64_only=false"],
+          [
+            "workflow",
+            "run",
+            "release.yml",
+            "-f",
+            `version=${version}`,
+            "-f",
+            "mac_arm64_only=false",
+          ],
           { cwd: rootDir, stdio: "inherit" },
         );
         log("OK", "Full-matrix release workflow triggered.");
       } catch {
-        log("!!", "Could not trigger workflow_dispatch via gh CLI. The tag push will still trigger an arm64-only build.");
-        log("!!", `To manually trigger full matrix: gh workflow run release.yml -f version=${version} -f mac_arm64_only=false`);
+        log(
+          "!!",
+          "Could not trigger workflow_dispatch via gh CLI. The tag push will still trigger an arm64-only build.",
+        );
+        log(
+          "!!",
+          `To manually trigger full matrix: gh workflow run release.yml -f version=${version} -f mac_arm64_only=false`,
+        );
       }
     } else {
       log("==>", `Pushing tag ${tag} (arm64-only release)...`);
@@ -710,7 +735,9 @@ async function main(): Promise<void> {
     console.log(`    4. git push origin main`);
     console.log(`    5. git tag ${tag} && git push origin ${tag}`);
     if (fullMatrix) {
-      console.log(`    6. gh workflow run release.yml -f version=${version} -f mac_arm64_only=false`);
+      console.log(
+        `    6. gh workflow run release.yml -f version=${version} -f mac_arm64_only=false`,
+      );
     }
     console.log("");
   }

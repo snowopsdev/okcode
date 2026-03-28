@@ -9,13 +9,13 @@ OK Code gains a **Voice mode** — a distinct interaction mode alongside Chat, C
 
 ### Design Pillars
 
-| Pillar | Description |
-|---|---|
-| **Interrupt-first** | The user can speak at any time to interrupt the assistant, just like a real conversation. Barge-in cancels in-flight TTS and restarts the turn. |
-| **Distinct mode** | Voice mode is not a microphone bolted onto the chat composer. It has its own full-screen (or near-full-screen) UI with ambient visuals, minimal chrome, and a focus on the audio loop. |
-| **Professional-grade audio** | Echo cancellation, noise suppression, automatic gain control, and VAD-based endpointing so the user never has to press a button to speak. |
-| **Graceful degradation** | If the browser denies mic access, or the network drops, the UI falls back to text with clear messaging. Voice transcripts always appear in the thread so context is never lost. |
-| **Latency budget** | Target < 500 ms mouth-to-ear for the first audio chunk of the assistant response. |
+| Pillar                       | Description                                                                                                                                                                            |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Interrupt-first**          | The user can speak at any time to interrupt the assistant, just like a real conversation. Barge-in cancels in-flight TTS and restarts the turn.                                        |
+| **Distinct mode**            | Voice mode is not a microphone bolted onto the chat composer. It has its own full-screen (or near-full-screen) UI with ambient visuals, minimal chrome, and a focus on the audio loop. |
+| **Professional-grade audio** | Echo cancellation, noise suppression, automatic gain control, and VAD-based endpointing so the user never has to press a button to speak.                                              |
+| **Graceful degradation**     | If the browser denies mic access, or the network drops, the UI falls back to text with clear messaging. Voice transcripts always appear in the thread so context is never lost.        |
+| **Latency budget**           | Target < 500 ms mouth-to-ear for the first audio chunk of the assistant response.                                                                                                      |
 
 ---
 
@@ -58,10 +58,10 @@ OK Code gains a **Voice mode** — a distinct interaction mode alongside Chat, C
 
 ### Two viable audio pipeline strategies
 
-| Strategy | Description | Pros | Cons |
-|---|---|---|---|
-| **A — Client-side STT/TTS** | Browser runs STT (Web Speech API or a streaming STT WebSocket) and TTS (Web Speech Synthesis or streaming TTS). Server only sees text. | Simpler server; existing orchestration unchanged; lower server cost. | Browser API quality varies; harder to get < 500 ms latency; less control over voice quality. |
-| **B — Server-relayed streaming** | Server opens persistent connections to STT & TTS services. Browser streams raw PCM up, server streams audio chunks down. | Best latency; consistent quality; server controls voice/model; enables future Realtime API integration. | More server complexity; bandwidth for raw audio; requires audio codec negotiation. |
+| Strategy                         | Description                                                                                                                            | Pros                                                                                                    | Cons                                                                                         |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| **A — Client-side STT/TTS**      | Browser runs STT (Web Speech API or a streaming STT WebSocket) and TTS (Web Speech Synthesis or streaming TTS). Server only sees text. | Simpler server; existing orchestration unchanged; lower server cost.                                    | Browser API quality varies; harder to get < 500 ms latency; less control over voice quality. |
+| **B — Server-relayed streaming** | Server opens persistent connections to STT & TTS services. Browser streams raw PCM up, server streams audio chunks down.               | Best latency; consistent quality; server controls voice/model; enables future Realtime API integration. | More server complexity; bandwidth for raw audio; requires audio codec negotiation.           |
 
 **Recommendation**: Start with **Strategy B (server-relayed)** for the core path, with a **Strategy A fallback** for environments where the server cannot reach external voice services. This mirrors how ChatGPT's voice mode works — the server mediates the audio pipeline.
 
@@ -73,11 +73,11 @@ OK Code gains a **Voice mode** — a distinct interaction mode alongside Chat, C
 
 **New files:**
 
-| File | Purpose |
-|---|---|
-| `apps/web/src/audio/MicCapture.ts` | `getUserMedia` wrapper — requests mic with `echoCancellation`, `noiseSuppression`, `autoGainControl`. Produces PCM frames via `AudioWorklet`. |
-| `apps/web/src/audio/VAD.ts` | Voice Activity Detection — runs a lightweight model (e.g., Silero VAD via ONNX) in an AudioWorklet to detect speech start/end. Emits `speechStart`, `speechEnd`, `interim` events. |
-| `apps/web/src/audio/Speaker.ts` | Manages an `AudioContext` output pipeline. Accepts streaming PCM/opus chunks and queues them for gapless playback. Exposes `interrupt()` to flush the queue instantly. |
+| File                                  | Purpose                                                                                                                                                                                                                   |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/web/src/audio/MicCapture.ts`    | `getUserMedia` wrapper — requests mic with `echoCancellation`, `noiseSuppression`, `autoGainControl`. Produces PCM frames via `AudioWorklet`.                                                                             |
+| `apps/web/src/audio/VAD.ts`           | Voice Activity Detection — runs a lightweight model (e.g., Silero VAD via ONNX) in an AudioWorklet to detect speech start/end. Emits `speechStart`, `speechEnd`, `interim` events.                                        |
+| `apps/web/src/audio/Speaker.ts`       | Manages an `AudioContext` output pipeline. Accepts streaming PCM/opus chunks and queues them for gapless playback. Exposes `interrupt()` to flush the queue instantly.                                                    |
 | `apps/web/src/audio/AudioPipeline.ts` | Orchestrates MicCapture → VAD → upstream send, and downstream receive → Speaker. Owns the barge-in logic: when VAD fires `speechStart` during playback, calls `Speaker.interrupt()` and signals the server to cancel TTS. |
 
 **Key decisions:**
@@ -90,13 +90,13 @@ OK Code gains a **Voice mode** — a distinct interaction mode alongside Chat, C
 
 **New files:**
 
-| File | Purpose |
-|---|---|
-| `apps/web/src/components/voice/VoiceModeView.tsx` | Top-level voice mode container. Replaces the standard chat view when voice mode is active. Full-viewport ambient UI. |
-| `apps/web/src/components/voice/VoiceOrb.tsx` | Central animated orb/waveform visualization. States: `idle`, `listening`, `thinking`, `speaking`. Responds to audio levels and VAD state. |
-| `apps/web/src/components/voice/VoiceTranscript.tsx` | Live transcript overlay — shows the current user utterance (interim STT) and the assistant's response text. Fades after a delay. |
-| `apps/web/src/components/voice/VoiceControls.tsx` | Minimal control bar: Mute, End Voice Mode, Settings. Always accessible. |
-| `apps/web/src/stores/voiceModeStore.ts` | Zustand store for voice-specific state: `phase` (idle/listening/processing/speaking), `micPermission`, `isMuted`, `currentTranscript`, `audioLevels`, `error`. |
+| File                                                | Purpose                                                                                                                                                        |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/web/src/components/voice/VoiceModeView.tsx`   | Top-level voice mode container. Replaces the standard chat view when voice mode is active. Full-viewport ambient UI.                                           |
+| `apps/web/src/components/voice/VoiceOrb.tsx`        | Central animated orb/waveform visualization. States: `idle`, `listening`, `thinking`, `speaking`. Responds to audio levels and VAD state.                      |
+| `apps/web/src/components/voice/VoiceTranscript.tsx` | Live transcript overlay — shows the current user utterance (interim STT) and the assistant's response text. Fades after a delay.                               |
+| `apps/web/src/components/voice/VoiceControls.tsx`   | Minimal control bar: Mute, End Voice Mode, Settings. Always accessible.                                                                                        |
+| `apps/web/src/stores/voiceModeStore.ts`             | Zustand store for voice-specific state: `phase` (idle/listening/processing/speaking), `micPermission`, `isMuted`, `currentTranscript`, `audioLevels`, `error`. |
 
 **UI states and transitions:**
 
@@ -139,12 +139,12 @@ OK Code gains a **Voice mode** — a distinct interaction mode alongside Chat, C
 
 **New files:**
 
-| File | Purpose |
-|---|---|
-| `apps/server/src/voice/VoiceRelay.ts` | Manages per-session voice pipelines. Opens upstream connections to STT/TTS providers. Routes audio frames from the client WebSocket to STT, and TTS audio back to the client. Handles cancellation on barge-in. |
-| `apps/server/src/voice/STTBridge.ts` | Abstraction over STT providers (OpenAI Whisper streaming, Deepgram, AssemblyAI). Consumes audio chunks, emits interim/final transcripts. |
-| `apps/server/src/voice/TTSBridge.ts` | Abstraction over TTS providers (OpenAI TTS, ElevenLabs, Cartesia). Accepts text (streaming or complete), emits audio chunks. Supports cancellation mid-stream. |
-| `apps/server/src/voice/VoiceSessionState.ts` | State machine for a single voice session: `idle` → `capturing` → `transcribing` → `llm-generating` → `synthesizing` → `idle`. Manages timeouts, cleanup. |
+| File                                         | Purpose                                                                                                                                                                                                         |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/server/src/voice/VoiceRelay.ts`        | Manages per-session voice pipelines. Opens upstream connections to STT/TTS providers. Routes audio frames from the client WebSocket to STT, and TTS audio back to the client. Handles cancellation on barge-in. |
+| `apps/server/src/voice/STTBridge.ts`         | Abstraction over STT providers (OpenAI Whisper streaming, Deepgram, AssemblyAI). Consumes audio chunks, emits interim/final transcripts.                                                                        |
+| `apps/server/src/voice/TTSBridge.ts`         | Abstraction over TTS providers (OpenAI TTS, ElevenLabs, Cartesia). Accepts text (streaming or complete), emits audio chunks. Supports cancellation mid-stream.                                                  |
+| `apps/server/src/voice/VoiceSessionState.ts` | State machine for a single voice session: `idle` → `capturing` → `transcribing` → `llm-generating` → `synthesizing` → `idle`. Manages timeouts, cleanup.                                                        |
 
 **Integration with existing orchestration:**
 
@@ -227,10 +227,10 @@ This means voice turns are **first-class thread messages** — they appear in th
 // packages/contracts/src/orchestration.ts — modification
 
 // Before:
-ProviderInteractionMode: ["chat", "code", "plan"]
+ProviderInteractionMode: ["chat", "code", "plan"];
 
 // After:
-ProviderInteractionMode: ["chat", "code", "plan", "voice"]
+ProviderInteractionMode: ["chat", "code", "plan", "voice"];
 ```
 
 The `"voice"` interaction mode tells the provider to optimize for conversational, concise responses rather than long-form code or plans. The system prompt for voice mode should instruct the LLM to:
@@ -275,13 +275,13 @@ User speaks again:                       |███████████|
 
 **Edge cases:**
 
-| Case | Handling |
-|---|---|
-| User coughs during TTS | VAD has a configurable `speechMinDuration` (default 300 ms). Short noise bursts are ignored. |
-| Network drop during voice session | Client detects WebSocket close, pauses mic, shows reconnection UI. On reconnect, voice session resumes or the user must re-enter voice mode. |
-| LLM response is very short (< 1 s) | No special handling needed — TTS finishes before barge-in is likely. |
-| Simultaneous speech and TTS echo | Echo cancellation in `getUserMedia` handles this. Additionally, the `AudioPipeline` feeds the TTS output signal as a reference to an optional software AEC if the browser's built-in AEC is insufficient. |
-| User mutes mic | `VoiceControls` sets `isMuted` in store. `MicCapture` stops sending frames. UI shows muted state on the orb. The user can still hear TTS. |
+| Case                               | Handling                                                                                                                                                                                                  |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| User coughs during TTS             | VAD has a configurable `speechMinDuration` (default 300 ms). Short noise bursts are ignored.                                                                                                              |
+| Network drop during voice session  | Client detects WebSocket close, pauses mic, shows reconnection UI. On reconnect, voice session resumes or the user must re-enter voice mode.                                                              |
+| LLM response is very short (< 1 s) | No special handling needed — TTS finishes before barge-in is likely.                                                                                                                                      |
+| Simultaneous speech and TTS echo   | Echo cancellation in `getUserMedia` handles this. Additionally, the `AudioPipeline` feeds the TTS output signal as a reference to an optional software AEC if the browser's built-in AEC is insufficient. |
+| User mutes mic                     | `VoiceControls` sets `isMuted` in store. `MicCapture` stops sending frames. UI shows muted state on the orb. The user can still hear TTS.                                                                 |
 
 ---
 
@@ -289,23 +289,23 @@ User speaks again:                       |███████████|
 
 ### STT Options
 
-| Provider | Latency | Quality | Streaming | Cost |
-|---|---|---|---|---|
-| **Deepgram Nova-2** | ~300 ms | Excellent | Yes (WebSocket) | $0.0043/min |
-| **OpenAI Whisper** (realtime API) | ~500 ms | Excellent | Yes | Per token |
-| **AssemblyAI** | ~400 ms | Excellent | Yes (WebSocket) | $0.0065/min |
-| **Browser Web Speech API** | ~200 ms | Good (Chrome) | Yes | Free |
+| Provider                          | Latency | Quality       | Streaming       | Cost        |
+| --------------------------------- | ------- | ------------- | --------------- | ----------- |
+| **Deepgram Nova-2**               | ~300 ms | Excellent     | Yes (WebSocket) | $0.0043/min |
+| **OpenAI Whisper** (realtime API) | ~500 ms | Excellent     | Yes             | Per token   |
+| **AssemblyAI**                    | ~400 ms | Excellent     | Yes (WebSocket) | $0.0065/min |
+| **Browser Web Speech API**        | ~200 ms | Good (Chrome) | Yes             | Free        |
 
 **Recommendation**: Deepgram Nova-2 as primary, Web Speech API as zero-cost fallback.
 
 ### TTS Options
 
-| Provider | Latency to first byte | Quality | Streaming | Cost |
-|---|---|---|---|---|
-| **Cartesia Sonic** | ~130 ms | Excellent | Yes (WebSocket) | $0.040/1K chars |
-| **ElevenLabs** | ~300 ms | Excellent | Yes (WebSocket) | $0.18/1K chars |
-| **OpenAI TTS** | ~400 ms | Very good | Yes (chunked) | $0.015/1K chars |
-| **Browser Speech Synthesis** | ~50 ms | Mediocre | Yes | Free |
+| Provider                     | Latency to first byte | Quality   | Streaming       | Cost            |
+| ---------------------------- | --------------------- | --------- | --------------- | --------------- |
+| **Cartesia Sonic**           | ~130 ms               | Excellent | Yes (WebSocket) | $0.040/1K chars |
+| **ElevenLabs**               | ~300 ms               | Excellent | Yes (WebSocket) | $0.18/1K chars  |
+| **OpenAI TTS**               | ~400 ms               | Very good | Yes (chunked)   | $0.015/1K chars |
+| **Browser Speech Synthesis** | ~50 ms                | Mediocre  | Yes             | Free            |
 
 **Recommendation**: OpenAI TTS as default (good balance), Cartesia Sonic as premium option, Browser Speech Synthesis as fallback.
 
@@ -416,15 +416,15 @@ apps/web/src/wsNativeApi.ts                  # Register voice push listeners
 
 ## 8. Risk Register
 
-| Risk | Impact | Likelihood | Mitigation |
-|---|---|---|---|
-| Browser echo cancellation is poor on some devices | Users hear feedback loops | Medium | Implement software AEC using the TTS output as a reference signal; document supported browsers. |
-| STT latency > 500 ms degrades experience | Conversation feels laggy | Medium | Use Deepgram (fastest); implement speculative LLM prefill while STT is still finalizing. |
-| TTS cost spirals for verbose LLM responses | Unexpected API bills | High | Enforce max response length for voice mode; add per-session cost tracking; warn at thresholds. |
-| AudioWorklet not supported in older browsers | Feature unavailable | Low | Fallback to ScriptProcessorNode with a console warning about degraded performance. |
-| Opus WASM module is large (~300 KB) | Slower initial load | Low | Lazy-load the module only when voice mode is activated; cache in service worker. |
-| VAD triggers on background noise | Phantom speech detection | Medium | Tunable sensitivity; add a manual push-to-talk fallback mode. |
-| Electron mic permissions differ per OS | Desktop users can't use voice | Medium | Handle permission flow in Electron main process; show OS-specific guidance. |
+| Risk                                              | Impact                        | Likelihood | Mitigation                                                                                      |
+| ------------------------------------------------- | ----------------------------- | ---------- | ----------------------------------------------------------------------------------------------- |
+| Browser echo cancellation is poor on some devices | Users hear feedback loops     | Medium     | Implement software AEC using the TTS output as a reference signal; document supported browsers. |
+| STT latency > 500 ms degrades experience          | Conversation feels laggy      | Medium     | Use Deepgram (fastest); implement speculative LLM prefill while STT is still finalizing.        |
+| TTS cost spirals for verbose LLM responses        | Unexpected API bills          | High       | Enforce max response length for voice mode; add per-session cost tracking; warn at thresholds.  |
+| AudioWorklet not supported in older browsers      | Feature unavailable           | Low        | Fallback to ScriptProcessorNode with a console warning about degraded performance.              |
+| Opus WASM module is large (~300 KB)               | Slower initial load           | Low        | Lazy-load the module only when voice mode is activated; cache in service worker.                |
+| VAD triggers on background noise                  | Phantom speech detection      | Medium     | Tunable sensitivity; add a manual push-to-talk fallback mode.                                   |
+| Electron mic permissions differ per OS            | Desktop users can't use voice | Medium     | Handle permission flow in Electron main process; show OS-specific guidance.                     |
 
 ---
 
@@ -432,14 +432,14 @@ apps/web/src/wsNativeApi.ts                  # Register voice push listeners
 
 Target: **< 500 ms** from user stops speaking to first audio chunk playing.
 
-| Stage | Budget | Notes |
-|---|---|---|
-| VAD endpointing | ~100 ms | Silero VAD with 100 ms look-ahead |
-| STT finalization | ~150 ms | Deepgram streaming final transcript |
-| LLM first token | ~150 ms | Provider-dependent; speculative prefill helps |
-| TTS first audio byte | ~80 ms | Cartesia Sonic; OpenAI TTS ~200 ms |
-| Network round-trips | ~20 ms | Local server, so minimal |
-| **Total** | **~500 ms** | Tight but achievable with Deepgram + Cartesia |
+| Stage                | Budget      | Notes                                         |
+| -------------------- | ----------- | --------------------------------------------- |
+| VAD endpointing      | ~100 ms     | Silero VAD with 100 ms look-ahead             |
+| STT finalization     | ~150 ms     | Deepgram streaming final transcript           |
+| LLM first token      | ~150 ms     | Provider-dependent; speculative prefill helps |
+| TTS first audio byte | ~80 ms      | Cartesia Sonic; OpenAI TTS ~200 ms            |
+| Network round-trips  | ~20 ms      | Local server, so minimal                      |
+| **Total**            | **~500 ms** | Tight but achievable with Deepgram + Cartesia |
 
 For OpenAI TTS (cheaper), expect ~650 ms. For the Realtime API (Phase 3), expect ~300 ms.
 

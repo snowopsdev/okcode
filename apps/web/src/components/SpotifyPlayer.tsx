@@ -284,9 +284,7 @@ export function SpotifyPlayerDrawer() {
         <div
           className={cn(
             "transition-all duration-200",
-            minimized
-              ? "pointer-events-none h-0 overflow-hidden opacity-0"
-              : "px-2 pb-2",
+            minimized ? "pointer-events-none h-0 overflow-hidden opacity-0" : "px-2 pb-2",
           )}
           aria-hidden={minimized}
         >
