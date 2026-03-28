@@ -1,5 +1,5 @@
+import { useRender } from "@base-ui/react/use-render";
 import { cva, type VariantProps } from "class-variance-authority";
-import * as React from "react";
 
 import { cn } from "~/lib/utils";
 
@@ -12,6 +12,8 @@ const buttonVariants = cva(
           "bg-linear-to-b from-primary to-[hsl(223_82%_62%)] text-primary-foreground shadow-[0_18px_45px_-20px_hsl(var(--primary)/0.85)] hover:brightness-110 hover:shadow-[0_22px_55px_-22px_hsl(var(--primary)/0.95)]",
         destructive:
           "bg-linear-to-b from-destructive to-[hsl(352_72%_52%)] text-destructive-foreground shadow-[0_18px_45px_-20px_hsl(var(--destructive)/0.7)] hover:brightness-105 hover:shadow-[0_22px_55px_-22px_hsl(var(--destructive)/0.8)]",
+        "destructive-outline":
+          "border border-destructive/35 bg-destructive/6 text-destructive shadow-[inset_0_1px_0_hsl(0_0%_100%/0.04)] hover:border-destructive/45 hover:bg-destructive/10 hover:text-destructive",
         outline:
           "border border-border/80 bg-card/70 text-foreground shadow-[inset_0_1px_0_hsl(0_0%_100%/0.04)] hover:border-primary/30 hover:bg-accent/80 hover:text-foreground",
         secondary:
@@ -26,6 +28,7 @@ const buttonVariants = cva(
         lg: "h-10 rounded-xl px-6",
         icon: "size-9 rounded-xl",
         "icon-xs": "size-7 rounded-lg",
+        "icon-sm": "size-8 rounded-lg",
       },
     },
     defaultVariants: {
@@ -35,33 +38,19 @@ const buttonVariants = cva(
   },
 );
 
-function Button({
-  className,
-  variant,
-  size,
-  asChild = false,
-  ...props
-}: React.ComponentProps<"button"> &
-  VariantProps<typeof buttonVariants> & {
-    asChild?: boolean;
-  }) {
-  const Comp = asChild ? (React.Fragment as never) : "button";
+interface ButtonProps
+  extends useRender.ComponentProps<"button">, VariantProps<typeof buttonVariants> {}
 
-  if (asChild) {
-    const child = React.Children.only(props.children) as React.ReactElement;
-    return React.cloneElement(child, {
+function Button({ className, variant, size, render, ...props }: ButtonProps) {
+  return useRender({
+    defaultTagName: "button",
+    props: {
       ...props,
-      className: cn(buttonVariants({ variant, size, className }), child.props.className),
-    });
-  }
-
-  return (
-    <Comp
-      data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }))}
-      {...props}
-    />
-  );
+      className: cn(buttonVariants({ variant, size, className })),
+      "data-slot": "button",
+    },
+    render,
+  });
 }
 
 export { Button, buttonVariants };
