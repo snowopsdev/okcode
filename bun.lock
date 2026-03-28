@@ -16,7 +16,7 @@
     },
     "apps/desktop": {
       "name": "@okcode/desktop",
-      "version": "0.0.4",
+      "version": "0.0.5",
       "dependencies": {
         "effect": "catalog:",
         "electron": "40.6.0",
@@ -65,7 +65,7 @@
     },
     "apps/server": {
       "name": "okcodes",
-      "version": "0.0.4",
+      "version": "0.0.5",
       "bin": {
         "okcode": "./dist/index.mjs",
       },
@@ -96,7 +96,7 @@
     },
     "apps/web": {
       "name": "@okcode/web",
-      "version": "0.0.4",
+      "version": "0.0.5",
       "dependencies": {
         "@base-ui/react": "^1.2.0",
         "@codemirror/language": "^6.12.3",
@@ -155,7 +155,7 @@
     },
     "packages/contracts": {
       "name": "@okcode/contracts",
-      "version": "0.0.4",
+      "version": "0.0.5",
       "dependencies": {
         "effect": "catalog:",
       },
