@@ -35,6 +35,7 @@ import {
   resolveGitFailureRetryLabel,
   resolveQuickAction,
   resolveSyncAction,
+  buildHookFailureAgentPrompt,
   formatOpenPullRequestLabel,
   summarizeGitFailure,
   summarizeGitResult,
@@ -79,7 +80,7 @@ import {
   gitStatusQueryOptions,
   invalidateGitQueries,
 } from "~/lib/gitReactQuery";
-import { randomUUID } from "~/lib/utils";
+import { newCommandId, newMessageId, randomUUID } from "~/lib/utils";
 import { resolvePathLinkTarget } from "~/terminal-links";
 import { readNativeApi } from "~/nativeApi";
 import { isWsRequestError } from "~/wsTransport";
@@ -782,6 +783,29 @@ export default function GitActionsControl({ gitCwd, activeThreadId }: GitActions
     setGitActionFailureDialog(null);
     void runGitActionWithToast(retryInput);
   }, [gitActionFailureDialog]);
+
+  const fixWithAgent = useCallback(async () => {
+    if (!gitActionFailureDialog || !activeThreadId) return;
+    const api = readNativeApi();
+    if (!api) return;
+    const promptText = buildHookFailureAgentPrompt(gitActionFailureDialog.failure);
+    setGitActionFailureDialog(null);
+    await api.orchestration.dispatchCommand({
+      type: "thread.turn.start",
+      commandId: newCommandId(),
+      threadId: activeThreadId,
+      message: {
+        messageId: newMessageId(),
+        role: "user",
+        text: promptText,
+        attachments: [],
+      },
+      assistantDeliveryMode: settings.enableAssistantStreaming ? "streaming" : "buffered",
+      runtimeMode: "approval-required",
+      interactionMode: "code",
+      createdAt: new Date().toISOString(),
+    });
+  }, [gitActionFailureDialog, activeThreadId, settings.enableAssistantStreaming]);
 
   const checkoutFeatureBranchAndContinuePendingAction = useCallback(() => {
     if (!pendingDefaultBranchAction) return;
@@ -1574,6 +1598,11 @@ export default function GitActionsControl({ gitCwd, activeThreadId }: GitActions
             <Button variant="outline" size="sm" onClick={() => setGitActionFailureDialog(null)}>
               Close
             </Button>
+            {gitActionFailureDialog?.failure.code === "hook_failed" && (
+              <Button variant="outline" size="sm" disabled={!activeThreadId} onClick={fixWithAgent}>
+                Fix with Agent
+              </Button>
+            )}
             <Button
               size="sm"
               disabled={!gitActionFailureDialog || isGitActionRunning}
