@@ -1,8 +1,17 @@
 {
   "editor.formatOnSave": true,
-  "editor.defaultFormatter": "oxc.oxc-vscode",
-  "editor.codeActionsOnSave": {
-    "source.fixAll.oxc": "always"
+  "editor.defaultFormatter": null,
+  "[javascript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
   },
   "typescript.tsdk": "node_modules/typescript/lib",
   "[json]": {
