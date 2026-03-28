@@ -13,6 +13,7 @@
 - `bun run dist:desktop:artifact -- --platform <mac|linux|win> --target <target> --arch <arch>` — Builds a desktop artifact for a specific platform/target/arch.
 - `bun run dist:desktop:dmg` — Builds a shareable macOS `.dmg` into `./release`.
 - `bun run dist:desktop:dmg:x64` — Builds an Intel macOS `.dmg`.
+- `bun run dist:desktop:dmg:arm64:signed` / `dist:desktop:dmg:x64:signed` — macOS DMG with Developer ID signing and notarization (requires Apple env; see below).
 - `bun run dist:desktop:linux` — Builds a Linux AppImage into `./release`.
 - `bun run dist:desktop:win` — Builds a Windows NSIS installer into `./release`.
 
@@ -24,7 +25,8 @@
 - Desktop packaging includes `apps/server/dist` (the `okcode` backend) and starts it on loopback with an auth token for WebSocket/API traffic.
 - Your tester can still open it on macOS by right-clicking the app and choosing **Open** on first launch.
 - To keep staging files for debugging package contents, run: `bun run dist:desktop:dmg -- --keep-stage`
-- To allow code-signing/notarization when configured in CI/secrets, add: `--signed`.
+- To build a **signed and notarized** macOS DMG locally, use `bun run dist:desktop:dmg:arm64:signed` or `bun run dist:desktop:dmg:x64:signed` (same as adding `--signed` to `dist:desktop:artifact`). Requires Apple credentials in the environment (see `docs/release.md`): `CSC_LINK` (base64 `.p12` or path), `CSC_KEY_PASSWORD`, `APPLE_API_KEY` (path to `.p8` or raw contents per your setup), `APPLE_API_KEY_ID`, `APPLE_API_ISSUER`. Alternatively set `OKCODE_DESKTOP_SIGNED=true` with the same variables.
+- Unsigned local DMGs: omit `--signed` or use the non-`:signed` scripts.
 - Windows `--signed` uses Azure Trusted Signing and expects:
   `AZURE_TRUSTED_SIGNING_ENDPOINT`, `AZURE_TRUSTED_SIGNING_ACCOUNT_NAME`,
   `AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE_NAME`, and `AZURE_TRUSTED_SIGNING_PUBLISHER_NAME`.
