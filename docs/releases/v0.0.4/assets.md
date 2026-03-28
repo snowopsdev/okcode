@@ -10,26 +10,21 @@ The GitHub Release also includes **documentation attachments** (same content as 
 | `okcode-RELEASE-NOTES.md`   | [v0.0.4.md](../v0.0.4.md)             |
 | `okcode-ASSETS-MANIFEST.md` | This file                             |
 
-After the workflow completes, expect **installer and updater** artifacts similar to the following (exact names may include the product name `OK Code` and version `0.0.4`).
+After the workflow completes, this release is expected to publish the **Apple Silicon macOS-only** asset set for version `0.0.4`.
 
 ## Desktop installers and payloads
 
-| Platform            | Kind           | Typical pattern |
-| ------------------- | -------------- | --------------- |
-| macOS Apple Silicon | DMG            | `*.dmg` (arm64) |
-| macOS Intel         | DMG            | `*.dmg` (x64)   |
-| macOS               | ZIP (updater)  | `*.zip`         |
-| Linux x64           | AppImage       | `*.AppImage`    |
-| Windows x64         | NSIS installer | `*.exe`         |
+| Platform            | Kind          | Expected filename         |
+| ------------------- | ------------- | ------------------------- |
+| macOS Apple Silicon | DMG           | `OK-Code-0.0.4-arm64.dmg` |
+| macOS Apple Silicon | ZIP (updater) | `OK-Code-0.0.4-arm64.zip` |
 
 ## Electron updater metadata
 
-| File               | Purpose                                                   |
-| ------------------ | --------------------------------------------------------- |
-| `latest-mac.yml`   | macOS update manifest (merged from per-arch builds in CI) |
-| `latest-linux.yml` | Linux update manifest                                     |
-| `latest.yml`       | Windows update manifest                                   |
-| `*.blockmap`       | Differential download block maps                          |
+| File             | Purpose                          |
+| ---------------- | -------------------------------- |
+| `latest-mac.yml` | macOS arm64 update manifest      |
+| `*.blockmap`     | Differential download block maps |
 
 ## Checksums
 
