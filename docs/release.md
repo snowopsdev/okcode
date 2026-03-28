@@ -238,27 +238,27 @@ git tag vX.Y.Z
 git push origin vX.Y.Z
 ```
 
-Tag pushes always build the **full platform matrix** (macOS arm64, macOS x64, Linux x64, Windows x64).
+Tag pushes now default to **Apple Silicon macOS only** so the arm64 DMG is always produced even when other platform builds are flaky.
 
 ### Option B: Manual dispatch flow (workflow_dispatch)
 
-Use this for prereleases, re-runs, or arm64-only builds.
+Use this for prereleases, re-runs, or opting back into the full multi-platform matrix.
 
 **Via GitHub UI:**
 
 1. Go to **Actions > Release Desktop > Run workflow**.
 2. Set **version** to the SemVer string (e.g., `1.2.3` or `v1.2.3`; the `v` prefix is optional).
-3. Optionally enable **mac_arm64_only** to build only the macOS Apple Silicon DMG (skips Intel Mac, Linux, and Windows).
+3. Leave **mac_arm64_only** enabled (the default) to build only the macOS Apple Silicon DMG. Disable it only when you intentionally want the full multi-platform matrix.
 4. Click **Run workflow**.
 
 **Via CLI:**
 
 ```bash
-# Full matrix
+# Apple Silicon only (default)
 gh workflow run release.yml -f version=1.2.3
 
-# Apple Silicon only
-gh workflow run release.yml -f version=1.2.3 -f mac_arm64_only=true
+# Full matrix (Intel Mac + Linux + Windows too)
+gh workflow run release.yml -f version=1.2.3 -f mac_arm64_only=false
 ```
 
 ### Dry-run release (pipeline validation)
@@ -280,10 +280,11 @@ The release workflow (`.github/workflows/release.yml`) runs six jobs:
 ### 1. Configure
 
 - **Runner:** `ubuntu-24.04`
-- Reads the `mac_arm64_only` input (only applies to `workflow_dispatch`).
+- Defaults to `mac_arm64_only=true` so Apple Silicon macOS builds are always prioritized.
+- For manual dispatches, setting `mac_arm64_only=false` opts back into the full matrix.
 - Outputs the build matrix JSON:
-  - **Full matrix (default):** macOS arm64, macOS x64, Linux x64, Windows x64.
-  - **arm64-only:** macOS arm64 only.
+  - **Default:** macOS arm64 only.
+  - **Full matrix:** macOS arm64, macOS x64, Linux x64, Windows x64.
 
 ### 2. Preflight
 
@@ -467,7 +468,7 @@ This publishes as a GitHub prerelease and does not update the "latest" designati
 For an M-series-only emergency fix, use manual dispatch:
 
 ```bash
-gh workflow run release.yml -f version=1.2.1 -f mac_arm64_only=true
+gh workflow run release.yml -f version=1.2.1
 ```
 
 ---

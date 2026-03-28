@@ -11,10 +11,10 @@ on:
         required: true
         type: string
       mac_arm64_only:
-        description: "Apple Silicon (M-series) Mac only — build and publish only the macOS arm64 DMG (skip Intel Mac, Linux, Windows). Ignored when releasing via tag push."
+        description: "Apple Silicon (M-series) Mac only — build and publish only the macOS arm64 DMG (skip Intel Mac, Linux, and Windows). Enabled by default."
         required: false
         type: boolean
-        default: false
+        default: true
 
 permissions:
   contents: write
@@ -33,11 +33,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mac_arm64_only="false"
+          mac_arm64_only="true"
           if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
             input="${{ github.event.inputs.mac_arm64_only }}"
-            if [[ "$input" == "true" ]]; then
-              mac_arm64_only="true"
+            if [[ "$input" == "false" ]]; then
+              mac_arm64_only="false"
             fi
           fi
           echo "mac_arm64_only=$mac_arm64_only" >> "$GITHUB_OUTPUT"
